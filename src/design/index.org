@@ -1,1 +1,6 @@
-https://docs.google.com/drawings/d/1aJfd29hYZqa600lHL90wcKNwo1AlL_xwTaKs48GfBrQ/edit?usp=sharing
+This image briefly describes the process of continuous integration
+
+#+BEGIN_HTML
+<img src="https://docs.google.com/drawings/d/16MpQkeBwP5ciNZquqPtE9wVQxkm4gttvx0JEfjQBFu4/edit?usp=sharing">
+<p align="center"> Services Interplay </p>
+#+END_HTML
