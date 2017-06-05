@@ -23,17 +23,17 @@
   cohesive software more rapidly.
   
 * Functional Requirements:
-  ** Automactically clone the updated repository from Github.
-  ** Build the required repository and run the respective testcases.
-  ** Report the errors generated incase certain testcases don't successfully run.
-  ** Host the generated Doc files on the respective server.
+** Automatically clone the updated repository from Github.
+** Build the required repository and run the respective testcases.
+** Report the errors generated incase certain testcases don't successfully run.
+** Host the generated Doc files on the respective server.
 
-* Shortlisted Tools
-  ** Jenkins
-  ** BuildBot
-  ** Go CD
-  ** Drone
-  ** Travis
-  ** Tox
+* Reference Tools
+** Jenkins
+** BuildBot
+** Go CD
+** Drone
+** Travis
+** Tox
 
 
