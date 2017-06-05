@@ -1,0 +1,6 @@
+This image briefly describes the process of continuous integration 
+
+#+BEGIN_HTML
+<img src="https://docs.google.com/drawings/d/16MpQkeBwP5ciNZquqPtE9wVQxkm4gttvx0JEfjQBFu4/pub?w=960&h=720">
+<p align="center"> Continuous Integration </p>
+#+END_HTML
