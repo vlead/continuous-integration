@@ -1,57 +1,51 @@
+#+TITLE: Deploying the application on a server
+#+AUTHOR: VLEAD
+#+DATE: [2017-06-07 Tue]
+#+SETUPFILE: ../org-templates/level-1.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
 
-*Introduction: This is the document describing the entire process through which
-  we installed Jenkins on the Base 4 server.
+* Introduction: 
+  This document briefly describes the steps to be followed to setup
+  =jenkin= continuous integrationen tool on server.
 
-
-Steps followed during the installation.
-
-I. A template is created on the base 4 server.
-
-Select an OS template and assign a CTID
-
+* Setting up jenkins server
+- Creating container on base4 server
+    
 #+BEGIN_SRC 
-vzctl create 301 --ostemplate ubuntu-16.04-x86_64 
+vzctl create 301 --ostemplate ubuntu-16.04-x86_64 --ipadd 10.4.12.30 --namesever jenkins-ubuntu
 #+END_SRC
 
-Assign an IP address to the container
-
-#+BEGIN_SRC
-vzctl set 301 --ipadd 10.4.12.30 --save
-#+END_SRC
-
-Name the server
-
-#+BEGIN_SRC 
-vzctl set 301  --namesever jenkins-ubuntu 10.4.12.30 --save
-#+END_SRC
-
-Start the container
+- Start the container
 
 #+BEGIN_SRC 
 vzctl start 301
 #+END_SRC
-
-II. Entering the template and installing jenkins
-
-Entering the created container
-
+- Login to the container
 #+BEGIN_SRC
 vzctl enter 301
 #+END_SRC
+- Proxy setup
 
-Update
+#+BEGIN_SRC
+export http_proxy="http://proxy.iiit.ac.in:8080"
+export https_proxy="http://proxy.iiit.ac.in:8080"
+#+END_SRC
+
+- Update the OS
 
 #+BEGIN_SRC 
 apt-get update
 #+END_SRC
 
-Installing Java
+- Install Java
 
 #+BEGIN_SRC 
 apt-get install openjdk-8-jdk
 #+END_SRC
 
-III. Commands to install Jenkins on the base4 server
+- Install Jenkis server application
 
 #+BEGIN_SRC 
 wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
@@ -60,14 +54,14 @@ sudo apt-get update
 sudo apt-get install jenkins
 #+END_SRC
 
-Starting and checking the status of Jenkins
+- Starting and checking the status of Jenkins
 
 #+BEGIN_SRC 
 java sudo systemctl start jenkins
 sudo systemctl status jenkins
 #+END_SRC
 
-Opening the firewall
+- Opening the firewall
 
 #+BEGIN_SRC 
 apt-get install ufw
@@ -75,33 +69,10 @@ sudo ufw allow 8080
 sudo ufw status
 #+END_SRC
 
-IV. Open Jenkins on a web browser using the IP address and the port
-
+- Access jenkis throw browser
+#+BEGIN_SRC 
 http://10.4.12.30:8080/
-
-
-P.S
-
-Check the proxy after every sub-part
-
-#+BEGIN_SRC
-echo $http_proxy
-echo $http_proxy
-#+END_SRC
-
-Check the output
-
-i. If it is blank, use this
-
-#+BEGIN_SRC
-export http_proxy="http://proxy.iiit.ac.in:8080"
-export https_proxy="https://proxy.iiit.ac.in:8080"
-#+END_SRC
-
-ii. If it isn't blank and gives the output
-#+BEGIN_SRC
-http://proxy.iiit.ac.in:8080
-https://proxy.iiit.ac.in:8080
 #+END_SRC
 
 
+* Configuration of jenkins server
