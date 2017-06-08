@@ -10,25 +10,6 @@
 * Introduction
   This document briefly explains the requirements of Contineous
   Integration tool
-* Purpose of Contineous Integration
-  - Currently a lab is defined as a set of related experiments and is
-    a web application.
-  - Each lab is a repository on github.
-  - To ensure evolution of software and solicit contribution from
-    folks across the world, continuous integration will be used around
-    each lab.
-  - This continuous integration tool automates the building, testing
-    and deploying of lab/service on varioius platforms.
-  - Projects created by a single individual or entire teams can use
-    this service to automate the integration process. 
-  - A cycle for integration  will involve building the code, running the unit test cases, hosting the
-    application and running the integration tests. 
-  - Each integration is verified by an automated build (including
-    test) to detect integration errors as quickly as possible. 
-  - Many teams find that this approach leads to significantly reduced
-    integration problems and allows a team to develop cohesive
-    software more rapidly.
-  
 * Functional Requirements
 ** Req1
    - Pull the github repository when a new release/tag made
@@ -39,11 +20,11 @@
 ** Req4
    - Host the documentation of service/lab in document server
 * Reference Open source tools
-** Jenkins
-** BuildBot
-** Go CD
-** Drone
-** Travis
-** Tox
+ - Jenkins
+ - BuildBot
+ - Go CD
+ - Drone
+ - Travis
+ - Tox
 
 

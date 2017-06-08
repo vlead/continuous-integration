@@ -9,6 +9,7 @@
 * Introduction 
   The =design= of the =Continuous Integration= is captured here.
 
+
 * Design
   Below image briefly describes the process of continuous integration
 
