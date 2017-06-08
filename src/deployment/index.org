@@ -1,9 +1,10 @@
 
 *Introduction: This is the document describing the entire process through which
- I installed Jenkins on the Base 4 server.
+  we installed Jenkins on the Base 4 server.
 
 
-Steps followed during the documentation.
+Steps followed during the installation.
+
 I. A template is created on the base 4 server.
 
 Select an OS template and assign a CTID
