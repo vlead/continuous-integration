@@ -77,3 +77,30 @@ sudo ufw status
 IV. Open Jenkins on a web browser using the IP address and the port
 
 http://10.4.12.30:8080/
+
+
+P.S
+
+1. Check the proxy after every sub-part
+
+#+BEGIN_SRC
+echo $http_proxy
+echo $http_proxy
+#+END_SRC
+
+2. Check the outpot
+
+i. If it is blank, use this
+
+#+BEGIN_SRC
+export http_proxy="http://proxy.iiit.ac.in:8080"
+export https_proxy="https://proxy.iiit.ac.in:8080"
+#+END_SRC
+
+ii. If it isn't blank and gives the output
+#+BEGIN_SRC
+http://proxy.iiit.ac.in:8080
+https://proxy.iiit.ac.in:8080
+#+END_SRC
+
+
