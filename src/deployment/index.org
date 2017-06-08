@@ -6,25 +6,25 @@
 Steps followed during the documentation.
 I. A template is created on the base 4 server.
 
-1. Select an OS template and assign a CTID
+Select an OS template and assign a CTID
 
 #+BEGIN_SRC 
 vzctl create 301 --ostemplate ubuntu-16.04-x86_64 
 #+END_SRC
 
-2. Assign an IP address to the container
+Assign an IP address to the container
 
 #+BEGIN_SRC
 vzctl set 301 --ipadd 10.4.12.30 --save
 #+END_SRC
 
-3. Name the server
+Name the server
 
 #+BEGIN_SRC 
 vzctl set 301  --namesever jenkins-ubuntu 10.4.12.30 --save
 #+END_SRC
 
-4. Start the container
+Start the container
 
 #+BEGIN_SRC 
 vzctl start 301
@@ -32,25 +32,25 @@ vzctl start 301
 
 II. Entering the template and installing jenkins
 
-1. Entering the created container
+Entering the created container
 
 #+BEGIN_SRC
 vzctl enter 301
 #+END_SRC
 
-2. Update
+Update
 
 #+BEGIN_SRC 
 apt-get update
 #+END_SRC
 
-3. Installing Java
+Installing Java
 
 #+BEGIN_SRC 
 apt-get install openjdk-8-jdk
 #+END_SRC
 
-4. Commands to install Jenkins on the base4 server
+III. Commands to install Jenkins on the base4 server
 
 #+BEGIN_SRC 
 wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
@@ -59,14 +59,14 @@ sudo apt-get update
 sudo apt-get install jenkins
 #+END_SRC
 
-5. Starting and checking the status of Jenkins
+Starting and checking the status of Jenkins
 
 #+BEGIN_SRC 
 java sudo systemctl start jenkins
 sudo systemctl status jenkins
 #+END_SRC
 
-III. Opening the firewall
+Opening the firewall
 
 #+BEGIN_SRC 
 apt-get install ufw
@@ -81,14 +81,14 @@ http://10.4.12.30:8080/
 
 P.S
 
-1. Check the proxy after every sub-part
+Check the proxy after every sub-part
 
 #+BEGIN_SRC
 echo $http_proxy
 echo $http_proxy
 #+END_SRC
 
-2. Check the outpot
+Check the output
 
 i. If it is blank, use this
 
