@@ -70,7 +70,7 @@ sudo ufw allow 8080
 sudo ufw status
 #+END_SRC
 
-- Access jenkis throw browser
+- Access jenkis through browser
 #+BEGIN_SRC 
 http://10.4.12.30:8080/
 #+END_SRC
