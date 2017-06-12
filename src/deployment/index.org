@@ -8,7 +8,7 @@
 
 * Introduction: 
   This document briefly describes the steps to be followed to setup
-  =jenkin= continuous integrationen tool on server.
+  =jenkins= continuous integration tool on server.
 
 
 * Setting up jenkins server
