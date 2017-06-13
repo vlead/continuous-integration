@@ -101,6 +101,11 @@
           "sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'",
           "apt-get update",
           "apt-get install jenkins",
+	  "/etc/init.d/jenkins start",
+	  "/etc/init.d/jenkins status",
+	  "apt-get install ufw",
+	  "ufw allow 8080",
+	  "ufw status"
         ],
         "lab_actions": {
           "init"    : [],
