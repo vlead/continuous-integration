@@ -68,13 +68,9 @@
           "configure": [],
           "pre_build": [],
           "build": [
-            "cd ../;make build"
+            
           ],
           "post_build": [
-            "cp -R ../build/code/* /var/www/",
-            "chmod -R 755 /var/www",
-            "mkdir /var/www/logs",
-            "chmod -R 777 /var/www/logs"
           ],
           "status": []
         }
@@ -107,8 +103,7 @@
 	  "ufw status"
 	  "apt-get install libapache2-mod-proxy-uwsgi -y",
 	  "a2enmod proxy_http",
-	  "echo "<VirtualHost *:80>\n<Location />\nProxyPass http://localhost:8384/\nProxyPassReverse http://localhost:8384/\n</Location>\n</VirtualHost>" > $CONF_FILE",
-	  "service apache2 restart",
+          "service apache2 restart"
         ],
         "lab_actions": {
           "init"    : [],
