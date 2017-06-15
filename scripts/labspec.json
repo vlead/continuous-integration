@@ -100,7 +100,7 @@
 	  "systemctl start jenkins",
 	  "apt-get install ufw",
 	  "ufw allow 8080",
-	  "ufw status"
+	  "ufw status",
 	  "apt-get install libapache2-mod-proxy-uwsgi -y",
 	  "a2enmod proxy_http",
           "service apache2 restart"
