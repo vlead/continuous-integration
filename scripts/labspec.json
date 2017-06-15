@@ -96,7 +96,7 @@
         },
         "installer": [
           "apt-get update",
-          "apt-get install openjdk-7-jdk",
+          "apt-get install openjdk-8-jdk",
           "wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -",
           "sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'",
           "apt-get update",
@@ -105,6 +105,10 @@
 	  "apt-get install ufw",
 	  "ufw allow 8080",
 	  "ufw status"
+	  "apt-get install libapache2-mod-proxy-uwsgi -y",
+	  "a2enmod proxy_http",
+	  "echo "<VirtualHost *:80>\n<Location />\nProxyPass http://localhost:8384/\nProxyPassReverse http://localhost:8384/\n</Location>\n</VirtualHost>" > $CONF_FILE",
+	  "service apache2 restart",
         ],
         "lab_actions": {
           "init"    : [],
