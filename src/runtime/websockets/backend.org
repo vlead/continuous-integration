@@ -9,7 +9,7 @@
 * Introduction 
   The Web Socket server at the back end
 
-* Import Statements
+** Import Statements
   #+BEGIN_SRC python
   import tornado.httpserver
   import tornado.websocket
@@ -17,7 +17,7 @@
   import tornado.web
   import socket
 
-*This is Websocket server uses the Tornado websocket handler.
+** This is Websocket server uses the Tornado websocket handler.
   #+BEGIN_SRC python
  
   class WebSHandler(tornado.websocket.WebSocketHandler):
