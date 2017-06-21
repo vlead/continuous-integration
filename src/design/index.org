@@ -9,11 +9,11 @@
 * Introduction 
   The =design= of the =Continuous Integration= is captured here.
 
-
+  
 * Design
   Below image briefly describes the process of continuous integration
 
 #+BEGIN_HTML
-<img src="https://docs.google.com/drawings/d/16MpQkeBwP5ciNZquqPtE9wVQxkm4gttvx0JEfjQBFu4/pub?w=960&h=720">
+<img src="https://docs.google.com/drawings/d/1tJ_wL-rEhKK6rND6nXCTQKxIHXJEICOXjUC4C2Xa5aw/edit?usp=sharing">
 <p align="center"> Continuous Integration </p>
 #+END_HTML

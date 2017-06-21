@@ -15,7 +15,7 @@
 ** Function to print hello world
     - Following api return hello world 
 
-#+NAME: get_nptel_urls_for_keyword
+#+NAME: hello
 #+BEGIN_SRC python
 @api.route("/hello")
 def hello():
@@ -25,7 +25,7 @@ def hello():
 
 
 * Infra                                                         :boilerplate:
-
+  
 ** sources
 *** Imports 
 #+name: imports_for_sources
@@ -36,27 +36,17 @@ import json
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
 from flask import Flask
-from runtime.config.flask_app_config import GENERIC_FEEDBACK_VERSION,\
-     GENERIC_LAB_FEEDBACK_VERSION, GENERIC_EXP_FEEDBACK_VERSION, ELASTIC_DB_URL
-import codecs
 import yaml
 api = Blueprint('APIs', __name__)
-
-KeywordPos = []
-comaPos = []
-appendedList = ""
 
 #+end_src
 
 
 * Tangle                                                        :boilerplate:
-
+  
 ** sources
 #+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 <<imports_for_sources>>
-<<find_word_occurences>>
-<<get_coma_pos>>
-<<main>>
-<<get_nptel_urls_for_keyword>>
+<<hello>>
 #+END_SRC
 
