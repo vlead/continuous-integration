@@ -30,6 +30,12 @@ def git():
     else:
         return "Method not allowed"
 
+    a = os.system('git clone https://github.com/vlead/continuous-integration.git')
+    if a == 0
+        print "Repo not present, begin cloning"
+    else:
+        print "Repo already present,Clone not required"
+
 #+END_SRC
 
 
@@ -47,6 +53,7 @@ from flask import session, render_template, Blueprint, request, \
 from flask import Flask
 import yaml
 api = Blueprint('APIs', __name__)
+import os
 
 #+end_src
 
