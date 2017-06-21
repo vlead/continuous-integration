@@ -14,6 +14,6 @@
   Below image briefly describes the process of continuous integration
 
 #+BEGIN_HTML
-<img src="https://docs.google.com/drawings/d/1tJ_wL-rEhKK6rND6nXCTQKxIHXJEICOXjUC4C2Xa5aw/edit?usp=sharing">
+<img src="https://docs.google.com/drawings/d/1tJ_wL-rEhKK6rND6nXCTQKxIHXJEICOXjUC4C2Xa5aw/pub?w=960&h=720">
 <p align="center"> Continuous Integration </p>
 #+END_HTML
