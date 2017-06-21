@@ -13,7 +13,7 @@
  <!doctype html>
   <html>
     <head>
-      <title>WebSockets Hello World</title>
+      <title>Websocket Demo Front End</title>
       <meta charset="utf-8" />
       <style type="text/css">
         body {
@@ -64,9 +64,6 @@
 
             // Open Websocket callback
             ws.onopen = function(evt) { 
-              $("#host").css("background", "#00ff00"); 
-              $("#port").css("background", "#00ff00"); 
-              $("#uri").css("background", "#00ff00");
               $("div#message_details").show();
               log("***Connection Opened***");
             };
