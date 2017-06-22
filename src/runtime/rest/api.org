@@ -13,7 +13,7 @@
   
 * REST
   
-** API accept the JSON sent by the git hub webhook via a POST request 
+** API accepts the JSON sent by the git hub webhook via a POST request 
    - 
 
 #+NAME: ci_hook
