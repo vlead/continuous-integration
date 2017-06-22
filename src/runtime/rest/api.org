@@ -13,28 +13,38 @@
 * REST
   
 ** API to initiate contineous integration process
-   
+   - 
 
 #+NAME: ci_hook
 #+BEGIN_SRC python
 @api.route("/ci_hook", methods = ['POST', 'GET'])
-def git():
+def ci_hook():
 
-    if request.method == "GET":
-        return "Method not allowed"
+  if request.method == "GET":
+      return "Method not allowed"
 
-    elif request.method == 'POST':
-        repo_data = request.get_json()
-        git_url = repo_data['repository']['html_url']
-        return git_url
-    else:
-        return "Method not allowed"
+  elif request.method == 'POST':
+      repo_data = request.get_json()
+      git_url = repo_data['repository']['html_url']
+      return git_url
+  else:
+      return "Method not allowed"
 
-    a = os.system('git clone https://github.com/vlead/continuous-integration.git')
-    if a == 0
-        print "Repo not present, begin cloning"
-    else:
-        print "Repo already present,Clone not required"
+  a = os.system('git clone https://github.com/vlead/continuous-integration.git')
+  if a == 0
+      print "Repo not present, begin cloning"
+  else:
+      print "Repo already present,Clone not required"
+      cmd = os.system('cd continuous-integration; git checkout develop; git pull')
+      if cmd == 0:
+	  cmd1 = os.system('cd continuous-integration; make')
+	  if cmd1 == 0:
+	      print "make is successful"
+
+	  else:
+	      print "failed to run make"
+
+        
 
 #+END_SRC
 
