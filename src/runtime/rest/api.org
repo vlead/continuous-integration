@@ -7,15 +7,71 @@
 #+OPTIONS: ^:nil
 
 * Introduction 
-  This document illustrates building of the REST API.
+  This document illustrates building of the REST API which is able to
+  identify a change made to the repo and respectively run the make
+  command
 
-  
+
 * REST  
-** Create github issue
 
-#+NAME: create_issue
+** Execute commands
+
+#+NAME: exec_commands
 #+BEGIN_SRC python
 
+def execute_command(cmd):
+    current_app.logger.debug("command: %s" % cmd)
+    return_code = -1
+    output = None
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+        return_code = 0
+    except subprocess.CalledProcessError as cpe:
+        current_app.logger.error("Called Process Error Message: %s" % cpe.output)
+        raise cpe
+    except OSError as ose:
+        current_app.logger.error("OSError: %s" % ose.output)
+        raise ose
+
+    return (return_code, output)
+
+#+END_SRC
+
+
+** Get repo_name
+
+#+NAME: get_repo_name
+#+BEGIN_SRC python
+
+def get_repo_name(repo_url):
+    repo_name = repo_url.split("/")[-1]
+    current_app.logger.debug("repo_name %s" % (repo_name))
+    return repo_name
+#+END_SRC
+
+
+** Build the repository
+#+NAME: build_repo
+#+BEGIN_SRC python
+
+def build_repo(repo_name):
+   current_app.logger.debug("Running make command")
+   mk_cmd = os.system('cd lab-data-service; make')
+   if mk_cmd == 0:
+        make_github_issue('Build ran successfully', 'Body text', 'assigned_user', 3, ['build_passed'])
+	current_app.logger.debug("make ran successfully")
+	return True
+   else:
+        make_github_issue('Failed to run build', 'Body text', 'assigned_user', 3, ['build_failed'])
+	current_app.logger.debug("Failed to run make")
+	return False
+#+END_SRC
+
+
+** Create github issue
+   
+#+NAME: create_issue
+#+BEGIN_SRC python
 
 def make_github_issue(title, body=None, assignee=None, milestone=None, labels=None):
     '''Create an issue on github.com using the given parameters.'''
@@ -29,7 +85,7 @@ def make_github_issue(title, body=None, assignee=None, milestone=None, labels=No
              'body': body,
              'assignee': '',
              'milestone': None,
-             'labels': ['build_failed']
+             'labels': [labels]
              }
     # Add the issue to our repository                                                                                                                                    
     current_app.logger.debug("Creating github issue")
@@ -40,11 +96,42 @@ def make_github_issue(title, body=None, assignee=None, milestone=None, labels=No
         current_app.logger.error("Could not creat Issue : %s" % title)
         current_app.logger.error("Response : %s" % r.content)
 
-make_github_issue('Issue Title', 'Body text', 'assigned_user', 3, ['bug'])
+
 
 #+END_SRC
 
-** API to initiate contineous integration process
+
+** Push the docs file
+
+#+NAME: push_docs
+#+BEGIN_SRC python
+
+def push_docs(repo_name):
+  src_dir = ("%s/build/docs" % (repo_name))
+  dest_dir = '/var/www'
+  NO_STRICT_CHECKING = "StrictHostKeyChecking no"
+  IP_ADDRESS = "root@doc.vlabs.ac.in"
+  try:
+      copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
+      current_app.logger.debug("copy command = %s" % copy_command)
+      command = (r'ssh -o "%s" "%s"' %
+		 (NO_STRICT_CHECKING, copy_command))
+      current_app.logger.debug("Command = %s" % command)
+      (ret_code, output) = execute_command(command)
+      if ret_code == 0:
+	  current_app.logger.debug("Copy successful")
+	  return True
+      else:
+	  current_app.logger.debug("Copy Unsuccessful, return code is %s" % str(ret_code))
+	  return False
+      except Exception, e:
+	  current_app.logger.error("ERROR = %s" % str(e))
+	  return False
+
+#+END_SRC
+
+
+** API accepts the JSON sent by the git hub webhook via a POST request 
 
 #+NAME: ci_hook
 #+BEGIN_SRC python
@@ -61,21 +148,22 @@ def ci_hook():
   else:
       return "Method not allowed"
 
-  a = os.system('git clone https://github.com/vlead/continuous-integration.git')
-  if a == 0:
-      print "Repo not present, begin cloning"
+  status = clone_repo(git_url)
+  if status == True:
+     repo_name = get_repo_name(git_url)  
+     status = build_repo(repo_name)
+     if status == True:
+	 status = push_docs(repo_name)  
+	 if status == True:
+	     current_app.logger.debug("Successfully copied docs to doc server")
+	     return "Successfully copied files to doc server"
+	 else:
+	     current_app.logger.error("Successfully copied docs to doc server")
+     else:
+	 current_app.logger.error("Error while running build")
+
   else:
-      print "Repo already present,Clone not required"
-      cmd = os.system('cd continuous-integration; git checkout develop; git pull')
-      if cmd == 0:
-	  cmd1 = os.system('cd continuous-integration; make')
-	  if cmd1 == 0:
-	      print "make is successful"
-
-	  else:
-	      print "failed to run make"
-
-        
+      print "error"
 
 #+END_SRC
 
@@ -89,6 +177,7 @@ def ci_hook():
 # -*- coding: utf-8 -*-
 import requests
 import json
+import subprocess
 from runtime.config.git_config import USERNAME, PASSWORD
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
@@ -99,6 +188,7 @@ import os
 
 #+end_src
 
+
 ** tests
 *** Imports 
 #+name: imports_for_tests
@@ -106,12 +196,8 @@ import os
 # -*- coding: utf-8 -*-
 import unittest
 from flask_testing import TestCase
-from sqlalchemy.exc import IntegrityError
-from runtime.utils.class_persistence_template import db
 from runtime.rest.app import create_app
-from runtime.config.system_config import KEY
 from runtime.rest.api import *
-from runtime.system.system import System
 import datetime
 config = {
          'SQLALCHEMY_DATABASE_URI': ''
@@ -133,9 +219,14 @@ if __name__ == '__main__':
 ** sources
 #+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 <<imports_for_sources>>
+<<exec_commands>>
+<<get_repo_name>>
+<<build_repo>>
 <<create_issue>>
+<<push_docs>>
 <<ci_hook>>
 #+END_SRC
+
 
 ** tests
 #+BEGIN_SRC python :tangle test_api.py :eval no :noweb yes
