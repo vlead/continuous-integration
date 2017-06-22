@@ -57,6 +57,33 @@ import os
 
 #+end_src
 
+** tests
+*** Imports 
+#+name: imports_for_tests
+#+BEGIN_SRC python
+# -*- coding: utf-8 -*-
+import unittest
+from flask_testing import TestCase
+from sqlalchemy.exc import IntegrityError
+from runtime.utils.class_persistence_template import db
+from runtime.rest.app import create_app
+from runtime.config.system_config import KEY
+from runtime.rest.api import *
+from runtime.system.system import System
+import datetime
+config = {
+         'SQLALCHEMY_DATABASE_URI': ''
+         }
+
+#+end_src
+
+*** Running tests
+#+NAME: run_test_cases
+#+BEGIN_SRC python
+if __name__ == '__main__':
+    unittest.main()
+
+#+END_SRC
 
 * Tangle                                                        :boilerplate:
   
@@ -66,3 +93,9 @@ import os
 <<hello>>
 #+END_SRC
 
+** tests
+#+BEGIN_SRC python :tangle test_api.py :eval no :noweb yes
+<<imports_for_tests>>
+<<test_ci_hook>>
+<<run_test_cases>>
+#+end_src
