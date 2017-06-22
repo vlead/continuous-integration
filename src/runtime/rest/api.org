@@ -124,9 +124,9 @@ def push_docs(repo_name):
       else:
 	  current_app.logger.debug("Copy Unsuccessful, return code is %s" % str(ret_code))
 	  return False
-      except Exception, e:
-	  current_app.logger.error("ERROR = %s" % str(e))
-	  return False
+  except Exception, e:
+      current_app.logger.error("ERROR = %s" % str(e))
+      return False
 
 #+END_SRC
 
