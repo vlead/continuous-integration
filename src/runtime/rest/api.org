@@ -31,7 +31,7 @@ def ci_hook():
       return "Method not allowed"
 
   a = os.system('git clone https://github.com/vlead/continuous-integration.git')
-  if a == 0
+  if a == 0:
       print "Repo not present, begin cloning"
   else:
       print "Repo already present,Clone not required"
@@ -100,7 +100,7 @@ if __name__ == '__main__':
 ** sources
 #+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 <<imports_for_sources>>
-<<hello>>
+<<ci_hook>>
 #+END_SRC
 
 ** tests
