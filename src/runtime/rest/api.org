@@ -7,51 +7,14 @@
 #+OPTIONS: ^:nil
 
 * Introduction 
-  This document illustrates building of the REST API.
+  This document illustrates building of the REST API which is able to identify a change made to the repo and respectively 
+  run the make command
 
   
-* REST  
-** Create github issue
-
-#+NAME: create_issue
-#+BEGIN_SRC python
-
-# Authentication for user filing issue (must have read/write access to                                                                                                   
-# repository to add issue to)                                                                                                                                            
-USERNAME = 'uname'
-PASSWORD = 'pswd'
-
-# The repository to add this issue to                                                                                                                                    
-REPO_OWNER = 'uname'
-REPO_NAME = 'Documents'
-
-def make_github_issue(title, body=None, assignee=None, milestone=None, labels=None):
-    '''Create an issue on github.com using the given parameters.'''
-    # Our url to create issues via POST                                                                                                                                  
-    url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, REPO_NAME)
-    # Create an authenticated session to create the issue                                                                                                                
-    session = requests.Session()
-    session.auth = (USERNAME, PASSWORD)
-    # Create our issue                                                                                                                                                   
-    issue = {'title': title,
-             'body': body,
-             'assignee': '',
-             'milestone': None,
-             'labels': ['build_failed']
-             }
-    # Add the issue to our repository                                                                                                                                    
-    r = session.post(url, json.dumps(issue))
-    if r.status_code == 201:
-        print 'Successfully created Issue "%s"' % title
-    else:
-        print 'Could not create Issue "%s"' % title
-        print 'Response:', r.content
-
-make_github_issue('Issue Title', 'Body text', 'assigned_user', 3, ['bug'])
-
-#+END_SRC
-
-** API to initiate contineous integration process
+* REST
+  
+** API accept the JSON sent by the git hub webhook via a POST request 
+   - 
 
 #+NAME: ci_hook
 #+BEGIN_SRC python
@@ -67,24 +30,41 @@ def ci_hook():
       return git_url
   else:
       return "Method not allowed"
-
-  a = os.system('git clone https://github.com/vlead/continuous-integration.git')
-  if a == 0:
-      print "Repo not present, begin cloning"
-  else:
-      print "Repo already present,Clone not required"
-      cmd = os.system('cd continuous-integration; git checkout develop; git pull')
-      if cmd == 0:
-	  cmd1 = os.system('cd continuous-integration; make')
-	  if cmd1 == 0:
-	      print "make is successful"
-
-	  else:
-	      print "failed to run make"
-
-        
-
+  
+  clone_build()
+   
 #+END_SRC
+
+
+
+** API to Clone/Pull the Repo and later execute the make command
+   
+   #+NAME: ci_hook
+   #+BEGIN_SRC python
+   
+   def clone_build():
+   	status1 = os.system('git clone https://github.com/vlead/continuous-integration.git')
+	if status == 0:
+		print "Repo not present in the directory,cloning it
+		status2 = os.system('cd continuous-integration; make')
+		if status2 == 0:
+		      print "make ran successfully"
+
+		  else:
+		      print "failed to run make"
+	else:
+		print "Repo already present,Cloning not required"
+		status3 = os.system('cd continuous-integration; git checkout develop; git pull')
+	      
+	      	if status3 == 0:
+			status4 = os.system('cd continuous-integration; make')
+			if status4 == 0:
+		      		print "make ran successfully"
+			else:
+		      		print "failed to run make"
+		else:
+			print "Couldn't Pull "
+	#+END_SRC
 
 
 * Infra                                                         :boilerplate:
@@ -138,7 +118,6 @@ if __name__ == '__main__':
 ** sources
 #+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 <<imports_for_sources>>
-<<create_issue>>
 <<ci_hook>>
 #+END_SRC
 
