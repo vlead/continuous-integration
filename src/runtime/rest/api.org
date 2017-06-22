@@ -16,14 +16,6 @@
 #+NAME: create_issue
 #+BEGIN_SRC python
 
-# Authentication for user filing issue (must have read/write access to                                                                                                   
-# repository to add issue to)                                                                                                                                            
-USERNAME = 'uname'
-PASSWORD = 'pswd'
-
-# The repository to add this issue to                                                                                                                                    
-REPO_OWNER = 'uname'
-REPO_NAME = 'Documents'
 
 def make_github_issue(title, body=None, assignee=None, milestone=None, labels=None):
     '''Create an issue on github.com using the given parameters.'''
@@ -40,12 +32,13 @@ def make_github_issue(title, body=None, assignee=None, milestone=None, labels=No
              'labels': ['build_failed']
              }
     # Add the issue to our repository                                                                                                                                    
+    current_app.logger.debug("Creating github issue")
     r = session.post(url, json.dumps(issue))
     if r.status_code == 201:
-        print 'Successfully created Issue "%s"' % title
+        current_app.logger.debug("Successfully created Issue : %s" % title)
     else:
-        print 'Could not create Issue "%s"' % title
-        print 'Response:', r.content
+        current_app.logger.error("Could not creat Issue : %s" % title)
+        current_app.logger.error("Response : %s" % r.content)
 
 make_github_issue('Issue Title', 'Body text', 'assigned_user', 3, ['bug'])
 
@@ -64,7 +57,7 @@ def ci_hook():
   elif request.method == 'POST':
       repo_data = request.get_json()
       git_url = repo_data['repository']['html_url']
-      return git_url
+      current_app.logger.debug("Git repository URL : %s" % (git_url))
   else:
       return "Method not allowed"
 
@@ -96,6 +89,7 @@ def ci_hook():
 # -*- coding: utf-8 -*-
 import requests
 import json
+from runtime.config.git_config import USERNAME, PASSWORD
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
 from flask import Flask
@@ -132,6 +126,7 @@ if __name__ == '__main__':
     unittest.main()
 
 #+END_SRC
+
 
 * Tangle                                                        :boilerplate:
   

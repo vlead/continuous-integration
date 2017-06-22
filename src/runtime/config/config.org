@@ -50,11 +50,28 @@ GENERIC_EXP_FEEDBACK_VERSION = 'generic-exp-feedback-v2.0'
 ELASTIC_DB_URL = "http://10.100.0.15:9200"
 #+END_SRC
 
+
+* Git repository configuration
+
+#+NAME: git_config
+#+BEGIN_SRC python
+
+# Authentication for user filing issue (must have read/write access to                                                                                                   
+# repository to add issue to)                                                                                                                                            
+USERNAME = 'uname'
+PASSWORD = 'pswd'
+
+#+END_SRC
   
 * Tangling                                                      :boilerplate:
   
 ** flask_app_config
 #+BEGIN_SRC python :tangle flask_app_config.py :eval no :noweb yes
 <<flask_app_config>>
+#+end_src
+
+** git_config
+#+BEGIN_SRC python :tangle git_config.py :eval no :noweb yes
+<<git_config>>
 #+end_src
 
