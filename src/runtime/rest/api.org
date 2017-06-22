@@ -36,7 +36,24 @@ def execute_command(cmd):
     return (return_code, output)
 
 #+END_SRC
-
+** Clone_repo
+#+NAME: clone_repo
+#+BEGIN_SRC python
+def clone_repo(git_url): 
+    command = "git clone %s" % (git_url)
+    (ret_code, output) = execute_command(command)
+  if ret_code == 0:
+      print "Repo not present, begin cloning"
+      return True
+  else:
+      print "Repo already present,Clone not required"
+      command = "cd lab-data-service; git checkout develop;git pull")
+      (ret_code, output) = execute_command(command)
+      if ret_code == 0:
+          return True
+      else:
+          return False
+#+END_SRC
 
 ** Get repo_name
 
@@ -220,6 +237,7 @@ if __name__ == '__main__':
 #+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 <<imports_for_sources>>
 <<exec_commands>>
+<<clone_repo>>
 <<get_repo_name>>
 <<build_repo>>
 <<create_issue>>
