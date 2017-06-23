@@ -110,7 +110,7 @@ def build_repo(repo_name):
    if ret_code == 0:
         current_app.logger.debug("build generated successfully")
 	current_app.logger.debug("Creating github issue")
-        ret_status = make_github_issue(repo_name, 'Build ran successfully', 'Body text', 'assigned_user', 3, ['build_passed'])
+        ret_status = make_github_issue(repo_name, 'Build ran successfully', 'Build ran successfully and docs are moved to doc server', 'assigned_user', 3, ['build_passed'])
 	if ret_status:
             current_app.logger.debug("Created github issue")
 	    return True
