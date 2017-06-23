@@ -41,17 +41,20 @@ def execute_command(cmd):
 #+BEGIN_SRC python
 def clone_repo(git_url): 
     command = "git clone %s" % (git_url)
+    current_app.logger.debug("Git clone command : %s" % (command))
     (ret_code, output) = execute_command(command)
     if ret_code == 0:
-        print "Repo not present, begin cloning"
+        current_app.logger.debug("Successfully cloned repo : %s" % (git_url))
 	return True
     else:
-        print "Repo already present,Clone not required"
-	command = "cd lab-data-service; git checkout develop;git pull")
+        current_app.logger.debug("repository already present, pulling repo : %s" % (git_url))
+	command = "cd lab-data-service; git checkout develop;git pull"
 	(ret_code, output) = execute_command(command)
 	if ret_code == 0:
+	    current_app.logger.debug("Successfully pulls the repository : %s" % (git_url))
             return True
         else:
+            current_app.logger.debug("Failed to pulls the repository : %s" % (git_url))
             return False
 #+END_SRC
 
@@ -128,7 +131,7 @@ def push_docs(repo_name):
   src_dir = ("%s/build/docs" % (repo_name))
   dest_dir = '/var/www'
   NO_STRICT_CHECKING = "StrictHostKeyChecking no"
-  IP_ADDRESS = "root@doc.vlabs.ac.in"
+  IP_ADDRESS = "root@10.4.12.63"
   try:
       copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
       current_app.logger.debug("copy command = %s" % copy_command)
@@ -152,7 +155,7 @@ def push_docs(repo_name):
 ** API accepts the JSON sent by the git hub webhook via a POST request 
 *** API Design
   :PROPERTIES:
-  :CUSTOM_ID: ci_hook
+  :CUSTOM_ID: ci_hook_api
   :END:    
   - URL :: /ci_hook
 
@@ -304,7 +307,7 @@ def push_docs(repo_name):
     + Status_Code: 200
       + Contents :
 #+BEGIN_EXAMPLE
-
+to be updated
 #+END_EXAMPLE    
   - Error Response:
     + Contents :
