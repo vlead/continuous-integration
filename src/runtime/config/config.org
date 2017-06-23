@@ -51,7 +51,7 @@ PASSWORD = 'pswd'
 DEST_DIR = '/var/www'
 
 # Doc server ip_address
-IP_ADDRESS = "root@10.4.12.63"
+IP_ADDRESS = "root@ipaddress"
   
 #+END_SRC
   
