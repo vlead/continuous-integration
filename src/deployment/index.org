@@ -76,3 +76,35 @@ chdir /home/user/myproject
 exec gunicorn --workers 3 --bind unix:myproject.sock -m 007 wsgi
 #+End_EXAMPLE
 
+14. Start the project
+#+BEGIN_EXAMPLE
+sudo start myproject
+#+End_EXAMPLE
+
+15. Proxy requests, configuring nginx
+#+BEGIN_EXAMPLE
+sudo vim /etc/nginx/sites-available/myproject
+#+End_EXAMPLE
+
+16. Copy the code into the myproject file in the previous directory
+#+BEGIN_EXAMPLE
+server {
+    listen 80;
+    server_name server_domain_or_IP;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/user/myproject/myproject.sock;
+    }
+}
+#+End_EXAMPLE
+
+17. To enable the Nginx server block configuration we've just created, link the file to the sites-enabled directory
+#+BEGIN_EXAMPLE
+sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled
+#+End_EXAMPLE
+
+18.
+#+BEGIN_EXAMPLE
+sudo service nginx restart
+#+End_EXAMPLE
