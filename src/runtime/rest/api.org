@@ -41,8 +41,18 @@ def execute_command(cmd):
 #+BEGIN_SRC python
 def repo_exist(repo_name):
     current_app.logger.debug("Checking repo %s existance" % (repo_name))
-    ret_val = os.path.exists(repo_name)
-    return ret_val
+
+    try:
+       ret_val = os.path.exists(repo_name)
+       return ret_val
+
+    except subprocess.CalledProcessError as cpe:
+        current_app.logger.error("Called Process Error Message: %s" % cpe.output)
+        raise cpe
+
+    except OSError as ose:
+        current_app.logger.error("OSError: %s" % ose.output)
+        raise ose
 
 #+END_SRC
 
@@ -50,10 +60,12 @@ def repo_exist(repo_name):
 #+NAME: clone_repo
 #+BEGIN_SRC python
 def clone_repo(git_url): 
+
   repo_name = get_repo_name(git_url)
   ret_val = repo_exist(repo_name)
+
   if not ret_val:
-      command = "git clone %s" % (git_url)
+      command = "git clone %s; cd %s;git checkout develop;git pull" % (git_url, repo_name)
       current_app.logger.debug("Git clone command : %s" % (command))
       (ret_code, output) = execute_command(command)
       if ret_code == 0:
@@ -77,9 +89,13 @@ def clone_repo(git_url):
 #+BEGIN_SRC python
 
 def get_repo_name(repo_url):
-    repo_name = repo_url.split("/")[-1]
-    current_app.logger.debug("repo_name %s" % (repo_name))
-    return repo_name
+    try:
+       repo_name = repo_url.split("/")[-1]
+       current_app.logger.debug("repo_name %s" % (repo_name))
+       return repo_name
+    except Exception as e:
+       current_app.logger.error("Exception %s" % (str(e)))
+       raise str(e)
 #+END_SRC
 
 
@@ -115,33 +131,33 @@ def build_repo(repo_name):
    
 #+NAME: create_issue
 #+BEGIN_SRC python
-REPO_OWNER = "ksripathi"
-#REPO_NAME  = "lab-data-service"
-def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
-    '''Create an issue on github.com using the given parameters.'''
-    # Our url to create issues via POST                                     
-    url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, repo_name)
-    # Create an authenticated session to create the issue                                                                                                                
-    session = requests.Session()
-    session.auth = (USERNAME, PASSWORD)
-    # Create our issue                                                                                                                                                   
-    issue = {'title': title,
-             'body': body,
-             'assignee': '',
-             'milestone': None,
-             'labels': [labels]
-             }
-    # Add the issue to our repository                                                                                                                                    
-    current_app.logger.debug("Creating github issue")
-    r = session.post(url, json.dumps(issue))
-    if r.status_code == 201:
-        current_app.logger.debug("Successfully created Issue : %s" % title)
-	return True
-    else:
-        current_app.logger.error("Could not creat Issue : %s" % title)
-        current_app.logger.error("Response : %s" % r.content)
-	return False
 
+REPO_OWNER = "ksripathi"
+def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
+
+  url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, repo_name)
+  try:
+      session = requests.Session()
+      session.auth = (USERNAME, PASSWORD)
+      issue = {'title': title,
+	       'body': body,
+	       'assignee': '',
+	       'milestone': None,
+	       'labels': [labels]
+	   }
+
+      current_app.logger.debug("Creating github issue")
+      r = session.post(url, json.dumps(issue))
+      if r.status_code == 201:
+	  current_app.logger.debug("Successfully created Issue : %s" % title)
+	  return True
+      else:
+	  current_app.logger.error("Could not creat Issue : %s" % title)
+	  current_app.logger.error("Response : %s" % r.content)
+	  return False
+  except Exception as e:
+      current_app.logger.error("Exception : %s" % str(e))
+      raise str(e)
 
 #+END_SRC
 
@@ -325,7 +341,10 @@ def push_docs(repo_name):
     + Status_Code: 200
       + Contents :
 #+BEGIN_EXAMPLE
-to be updated
+{
+"status_code" : 200,
+"message" : "Successfully copied docs to server" 
+}
 #+END_EXAMPLE    
   - Error Response:
     + Contents :
@@ -359,7 +378,12 @@ def ci_hook():
 	 status = push_docs(repo_name)  
 	 if status == True:
 	     current_app.logger.debug("Successfully copied docs to doc server")
-	     return "Successfully copied files to doc server"
+	     message = {
+	               "status_code" : 200,
+	               "message" : "Successfully copied docs to server" 
+		       }
+
+	     return jsonify(message)
 	 else:
 	     current_app.logger.error("Successfully copied docs to doc server")
      else:
