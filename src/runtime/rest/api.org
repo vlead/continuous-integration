@@ -14,7 +14,7 @@
 
 * REST  
 
-** Function to execute shell commands
+** Execute shell commands
 
 #+NAME: exec_commands
 #+BEGIN_SRC python
@@ -40,86 +40,102 @@ def linuxCommandExecuter(cmd):
     return (return_code, output)
 #+END_SRC
 
-** Function to extract reposirtory name 
+
+** Extract git repository name 
 
 #+NAME: get_repo_name
 #+BEGIN_SRC python
 
-
 def repoNameExtacter(url): #extract_repo_name before
-    repo_name = url.split("/")[-1]#write an example url
-    current_app.logger.debug("repo_name %s" % (repo_name))
-    return repo_name
+    try:
+       repo_name = repo_url.split("/")[-1]
+       current_app.logger.debug("repo_name %s" % (repo_name))
+       return repo_name
+    except Exception as e:
+       current_app.logger.error("Exception %s" % (str(e)))
+       raise str(e)
 
 #+END_SRC
-** This function is used to raise an issue in the respective github repository.
-*** It extracts the data from the JSON recieved from the respective webhook. 
+
+
+** Create issue on github repository
+   - It extracts the data from the JSON recieved from the respective webhook. 
 #+NAME: create_issue
 #+BEGIN_SRC python
-REPO_OWNER =  #Extract from configuration file
-REPO_NAME  =  #Extract from configuration file
 
-def issueGenerator(title, body=None, assignee=None, milestone=None, labels=None):
-    '''Create an issue on github.com using the given parameters.'''
-    # Our url to create issues via POST                                                                                                                                  
-    url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, REPO_NAME)
-    # Create an authenticated session to create the issue                                                                                                                
-    session = requests.Session()
-    session.auth = (USERNAME, PASSWORD)
-    # Create our issue                                                                                                                                                   
-    issue = {'title': title,
-             'body': body,
-             'assignee': '',
-             'milestone': None,
-             'labels': [labels]
-             }
-    # Add the issue to our repository                                                                                                                                    
-    current_app.logger.debug("Creating github issue")
-    r = session.post(url, json.dumps(issue))
-    
-    if r.status_code == 201:
-        current_app.logger.debug("Successfully created Issue : %s" % title)
-    
-    else:
-        current_app.logger.error("Could not creat Issue : %s" % title)
-        current_app.logger.error("Response : %s" % r.content)
+REPO_OWNER = "ksripathi"
+def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
+    url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, repo_name)
+    try:
+	session = requests.Session()
+	session.auth = (USERNAME, PASSWORD)
+	issue = {'title': title,
+		 'body': body,
+		 'assignee': '',
+		 'milestone': None,
+		 'labels': labels
+	     }
 
+	current_app.logger.debug("Creating github issue")
+	r = session.post(url, json.dumps(issue))
+	if r.status_code == 201:
+	    current_app.logger.debug("Successfully created Issue : %s" % title)
+	    return True
+	else:
+	    current_app.logger.error("Could not creat Issue : %s" % title)
+	    current_app.logger.error("Response : %s" % r.content)
+	    return False
+    except Exception as e:
+	current_app.logger.error("Exception : %s" % str(e))
+	raise str(e)
 
 
 #+END_SRC
 
 
-** This utility function is used to push the docs created after running the make file onto the docs folder.
+** Push docs to doc server 
+   - This utility function is used to push the docs created after
+     running the make file onto the docs folder.
+
+#+NAME: push_docs
 #+BEGIN_SRC python
 
 def docsPusher(repo_name):
-  src_dir = ("%s/build/docs" % (repo_name))
-  dest_dir = '/var/www'
-  NO_STRICT_CHECKING = "StrictHostKeyChecking no"
-  IP_ADDRESS = "root@10.4.12.63"
-  try:
-      copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
-      current_app.logger.debug("copy command = %s" % copy_command)
-      (ret_code, output) = linuxCommandExecuter(copy_command)
-      if ret_code == 0:
-	  current_app.logger.debug("Copy successful")
-	  return True
-      else:
-	  current_app.logger.debug("Copy Unsuccessful, return code is %s" % str(ret_code))
-	  return False
-  except Exception, e:
-      current_app.logger.error("ERROR = %s" % str(e))
-      return False
+    SRC_DIR = ("%s/build/docs" % (repo_name))
+    try:
+        copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR
+        current_app.logger.debug("copy command = %s" % copy_command)
+        (ret_code, output) = linuxCommandExecuter(copy_command)
+        if ret_code == 0:
+	    current_app.logger.debug("Copy successful")
+	    return True
+        else:
+	    current_app.logger.debug("Copy Unsuccessful, return code is %s" % str(ret_code))
+	    return False
+    except Exception, e:
+        current_app.logger.error("ERROR = %s" % str(e))
+        return False
 
 #+END_SRC
+
+
 ** Repo_exist
 #+NAME: repo_exist
 #+BEGIN_SRC python
 
-def repo_exist(repo_name):
+def isRepoExist(repo_name):
     current_app.logger.debug("Checking repo %s existance" % (repo_name))
-    ret_val = os.path.exists(repo_name)
-    return ret_val
+    try:
+       ret_val = os.path.exists(repo_name)
+       return ret_val
+
+    except subprocess.CalledProcessError as cpe:
+        current_app.logger.error("Called Process Error Message: %s" % cpe.output)
+        raise cpe
+
+    except OSError as ose:
+        current_app.logger.error("OSError: %s" % ose.output)
+        raise ose
 
 #+END_SRC
 
@@ -130,28 +146,30 @@ def repo_exist(repo_name):
 #+BEGIN_SRC python
 class RepoClone:
 
-  def __init__(self,git_url):
-  url = git_url
-  
-  def repoCloner(): #clone_repo before  
-    
-    command = "git clone %s" % (url)
+    def __init__(self,git_url):
+	self.git_url = git_url
 
-    (retrun_code, output) = linuxCommandExecuter(command)
-    
-    if return_code == 0:
-      print "Repo is not present, cloning it"
-	    return True
-    
-    else:
-      print "Repo is already there, not required  to clone it"
-	    next_command = "cd lab-data-service; git checkout develop;git pull"
-	    (return_code, output) = linuxCommandExecuter(next_command)
-	
-      if return_code == 0:
-        return True
-      else:
-        return False
+    def repoCloner(): #clone_repo before  
+	repo_name = repoNameExtacter(git_url)
+	ret_val = isRepoExist(repo_name)
+
+	if not ret_val:
+	    command = "git clone %s; cd %s;git checkout develop;git pull" % (git_url, repo_name)
+	    current_app.logger.debug("Git clone command : %s" % (command))
+	    (ret_code, output) = linuxCommandExecuter(command)
+	    if ret_code == 0:
+		current_app.logger.debug("Successfully cloned repo : %s" % (git_url))
+		return True
+	else:
+	    current_app.logger.debug("repository already present, pulling repo : %s" % (git_url))
+	    command = "cd %s; git checkout develop;git pull" % (repo_name)
+	    (ret_code, output) = linuxCommandExecuter(command)
+	    if ret_code == 0:
+		current_app.logger.debug("Successfully pulls the repository : %s" % (git_url))
+		return True
+	    else:
+		current_app.logger.debug("Failed to pulls the repository : %s" % (git_url))
+		return False
 
 #+END_SRC
 
@@ -165,25 +183,35 @@ class RepoClone:
 
 class RepoBuild:
 
-  def __init__(self,url):
-  url = url
-  
-  '''This function is used to run the make commmand'''
-  def repoBuilder():#build_repo before
-    repo_name = repoNameExtacter(url)
-    (return_value, output) = linuxCommandExecuter('cd + ; make')
-    
-    if return_value == 0:
-      issueGenerator('Build ran successfully', 'Body text', 'assigned_user', 3, ['build_passed'])#change function name
-	    current_app.logger.debug("make ran successfully")
-	    return True
-    
-    else:
-      issueGenerator('Failed to run build', 'Body text', 'assigned_user', 3, ['build_failed'])#arguments doubt?
-	    current_app.logger.debug("Failed to run make")
-	    return False
+    def __init__(self,url):
+	self.git_url = url
 
-
+    '''This function is used to run the make commmand'''
+    def repoBuilder():#build_repo before
+	current_app.logger.debug("Running make command")
+	mk_cmd = 'cd %s;make' % (repo_name)
+	(ret_code, output) = linuxCommandExecuter(mk_cmd)
+	if ret_code == 0:
+	    current_app.logger.debug("build generated successfully")
+	    current_app.logger.debug("Creating github issue")
+	    ret_status = make_github_issue(repo_name, 'Build ran successfully', \
+	                                   'Build ran successfully and docs are moved to doc server', \
+                                           'assigned_user', 3, ['build_passed'])
+	    if ret_status:
+		current_app.logger.debug("Created github issue")
+		return True
+	    else:
+		current_app.logger.debug("Failed to create github issue")
+		return True
+	else:
+	    current_app.logger.debug("Couldn't generate build")
+	    current_app.logger.debug("Creating github issue")
+	    ret_status = make_github_issue(repo_name, 'Failed to run build', \
+                                           'Body text', 'assigned_user', 3, ['build_failed'])
+	    if ret_status:
+		current_app.logger.debug("Created github issue")
+		return False
+		
 #+END_SRC
 
 
@@ -193,41 +221,47 @@ class RepoBuild:
 @api.route("/ci_hook", methods = ['POST', 'GET'])
 def ci_hook():
 
-  if request.method == "GET":
-      return "Method not allowed"
+    if request.method == "GET":
+	return "Method not allowed"
 
-  elif request.method == 'POST':
-    repo_data = request.get_json()
-    git_url = repo_data['repository']['html_url']
-    current_app.logger.debug("Git repository URL : %s" % (git_url))
-  
-  else:
-      return "Method not allowed"
+    elif request.method == 'POST':
+	repo_data = request.get_json()
+	git_url = repo_data['repository']['html_url']
+	current_app.logger.debug("Git repository URL : %s" % (git_url))
 
-  repo = repoClone(git_url)
-  cmd_status = repo.RepoCloner()
-  
-  if cmd_status == True:
-     repo_name = repoNameExtacter(git_url)  
-     rtb = RepoBuild
-     status = rtb.repoBuilder(repo_name)
-     
-     if status == True:
-        status = docsPusher(repo_name)  
-        
-        if status == True:
-          current_app.logger.debug("Successfully copied the docs to doc server")
-          return "Successfully copied files to doc server"
-   
-        else:
-          current_app.logger.error("Unable to copy docs to doc server")
-     
-     else:
-      current_app.logger.error("Couldn't run build")
+    else:
+	return "Method not allowed"
 
-  else:
-      current_app.logger.error("Couldn't run clone")
-  #+END_SRC
+    repo = RepoClone(git_url)
+    cmd_status = repo.repoCloner()
+
+    if cmd_status == True:
+	repo_name = repoNameExtacter(git_url)  
+	rtb = RepoBuild()
+	status = rtb.repoBuilder(repo_name)
+
+	if status == True:
+	    status = docsPusher(repo_name)  
+
+	    if status == True:
+		current_app.logger.debug("Successfully copied the docs to doc server")
+		message = {
+	               "status_code" : 200,
+	               "message" : "Successfully copied docs to server" 
+		       }
+
+		return jsonify(message)
+		
+	    else:
+		current_app.logger.error("Unable to copy docs to doc server")
+
+	else:
+	    current_app.logger.error("Couldn't run build")
+
+    else:
+	current_app.logger.error("Couldn't run clone")
+
+#+END_SRC
 
 *** API Design
   :PROPERTIES:
@@ -399,33 +433,45 @@ to be updated
 @api.route("/ci_hook", methods = ['POST', 'GET'])
 def ci_hook():
 
-  if request.method == "GET":
-      return "Method not allowed"
+    if request.method == "GET":
+	return "Method not allowed"
 
-  elif request.method == 'POST':
-      repo_data = request.get_json()
-      git_url = repo_data['repository']['html_url']
-      current_app.logger.debug("Git repository URL : %s" % (git_url))
-  else:
-      return "Method not allowed"
+    elif request.method == 'POST':
+	repo_data = request.get_json()
+	git_url = repo_data['repository']['html_url']
+	current_app.logger.debug("Git repository URL : %s" % (git_url))
 
-  cmd_status = clone_repo(git_url)
-  if cmd_status == True:
-     repo_name = get_repo_name(git_url)  
-     status = build_repo(repo_name)
-     if status == True:
-	 status = push_docs(repo_name)  
-	 if status == True:
-	     current_app.logger.debug("Successfully copied docs to doc server")
-	     return "Successfully copied files to doc server"
-	 else:
-	     current_app.logger.error("Successfully copied docs to doc server")
-     else:
-	 current_app.logger.error("Error while running build")
+    else:
+	return "Method not allowed"
 
-  else:
-      current_app.logger.error("Error while running clone")
-      
+    repo = RepoClone(git_url)
+    cmd_status = repo.repoCloner()
+
+    if cmd_status == True:
+	repo_name = repoNameExtacter(git_url)  
+	rtb = RepoBuild()
+	status = rtb.repoBuilder(repo_name)
+
+	if status == True:
+	    status = docsPusher(repo_name)  
+
+	    if status == True:
+		current_app.logger.debug("Successfully copied the docs to doc server")
+		message = {
+	               "status_code" : 200,
+	               "message" : "Successfully copied docs to server" 
+		       }
+
+		return jsonify(message)
+		
+	    else:
+		current_app.logger.error("Unable to copy docs to doc server")
+
+	else:
+	    current_app.logger.error("Couldn't run build")
+
+    else:
+	current_app.logger.error("Couldn't run clone")
 
 #+END_SRC
 
@@ -440,7 +486,7 @@ def ci_hook():
 import requests
 import json
 import subprocess
-from runtime.config.git_config import USERNAME, PASSWORD
+from runtime.config.git_config import USERNAME, PASSWORD, IP_ADDRESS, DEST_DIR
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
 from flask import Flask
@@ -481,11 +527,11 @@ if __name__ == '__main__':
 ** sources
 #+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 <<imports_for_sources>>
-<<exec_commands>>
+<<build_repo>>
 <<clone_repo>>
+<<exec_commands>>
 <<repo_exist>>
 <<get_repo_name>>
-<<build_repo>>
 <<create_issue>>
 <<push_docs>>
 <<ci_hook>>

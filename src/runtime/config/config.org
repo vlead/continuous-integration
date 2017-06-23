@@ -61,8 +61,15 @@ ELASTIC_DB_URL = "http://10.100.0.15:9200"
 USERNAME = 'uname'
 PASSWORD = 'pswd'
 
+#Doc server location path
+DEST_DIR = '/var/www'
+
+# Doc server ip_address
+IP_ADDRESS = "root@ipaddress"
+
 #+END_SRC
   
+
 * Tangling                                                      :boilerplate:
   
 ** flask_app_config
