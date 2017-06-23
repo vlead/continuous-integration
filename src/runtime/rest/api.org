@@ -143,7 +143,7 @@ def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None
 	       'body': body,
 	       'assignee': '',
 	       'milestone': None,
-	       'labels': [labels]
+	       'labels': labels
 	   }
 
       current_app.logger.debug("Creating github issue")
