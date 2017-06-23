@@ -19,7 +19,7 @@
 #+NAME: exec_commands
 #+BEGIN_SRC python
 
-def execute_command(cmd):
+def linuxCommandExecuter(cmd):
     current_app.logger.debug("command: %s" % cmd)
     
     return_code = -1 #If the linux command executes successfully it returns zero
@@ -53,11 +53,11 @@ def repoNameExtacter(url): #extract_repo_name before
 
 #+END_SRC
 ** This function is used to raise an issue in the respective github repository.
-*** It uses extracts the data from the JSON recieved from the respective webhook. 
+*** It extracts the data from the JSON recieved from the respective webhook. 
 #+NAME: create_issue
 #+BEGIN_SRC python
-REPO_OWNER = 
-REPO_NAME  = 
+REPO_OWNER =  #Extract from configuration file
+REPO_NAME  =  #Extract from configuration file
 
 def issueGenerator(title, body=None, assignee=None, milestone=None, labels=None):
     '''Create an issue on github.com using the given parameters.'''
@@ -100,7 +100,7 @@ def docsPusher(repo_name):
   try:
       copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
       current_app.logger.debug("copy command = %s" % copy_command)
-      (ret_code, output) = execute_command(copy_command)
+      (ret_code, output) = linuxCommandExecuter(copy_command)
       if ret_code == 0:
 	  current_app.logger.debug("Copy successful")
 	  return True
@@ -137,7 +137,7 @@ class RepoClone:
     
     command = "git clone %s" % (url)
 
-    (retrun_code, output) = execute_command(command)
+    (retrun_code, output) = linuxCommandExecuter(command)
     
     if return_code == 0:
       print "Repo is not present, cloning it"
@@ -146,7 +146,7 @@ class RepoClone:
     else:
       print "Repo is already there, not required  to clone it"
 	    next_command = "cd lab-data-service; git checkout develop;git pull"
-	    (return_code, output) = execute_command(next_command)
+	    (return_code, output) = linuxCommandExecuter(next_command)
 	
       if return_code == 0:
         return True
@@ -171,7 +171,7 @@ class RepoBuild:
   '''This function is used to run the make commmand'''
   def repoBuilder():#build_repo before
     repo_name = repoNameExtacter(url)
-    (return_value, output) = execute_command('cd + ; make')
+    (return_value, output) = linuxCommandExecuter('cd + ; make')
     
     if return_value == 0:
       issueGenerator('Build ran successfully', 'Body text', 'assigned_user', 3, ['build_passed'])#change function name
