@@ -36,26 +36,39 @@ def execute_command(cmd):
     return (return_code, output)
 
 #+END_SRC
+** Repo_exist
+#+NAME: repo_exist
+#+BEGIN_SRC python
+def repo_exist(repo_name):
+    current_app.logger.debug("Checking repo %s existance" % (repo_name))
+    ret_val = os.path.exists(repo_name)
+    return ret_val
+
+#+END_SRC
+
 ** Clone_repo
 #+NAME: clone_repo
 #+BEGIN_SRC python
 def clone_repo(git_url): 
-    command = "git clone %s" % (git_url)
-    current_app.logger.debug("Git clone command : %s" % (command))
-    (ret_code, output) = execute_command(command)
-    if ret_code == 0:
-        current_app.logger.debug("Successfully cloned repo : %s" % (git_url))
-	return True
-    else:
-        current_app.logger.debug("repository already present, pulling repo : %s" % (git_url))
-	command = "cd lab-data-service; git checkout develop;git pull"
-	(ret_code, output) = execute_command(command)
-	if ret_code == 0:
-	    current_app.logger.debug("Successfully pulls the repository : %s" % (git_url))
-            return True
-        else:
-            current_app.logger.debug("Failed to pulls the repository : %s" % (git_url))
-            return False
+  repo_name = get_repo_name(git_url)
+  ret_val = repo_exist(repo_name)
+  if not ret_val:
+      command = "git clone %s" % (git_url)
+      current_app.logger.debug("Git clone command : %s" % (command))
+      (ret_code, output) = execute_command(command)
+      if ret_code == 0:
+	  current_app.logger.debug("Successfully cloned repo : %s" % (git_url))
+	  return True
+  else:
+      current_app.logger.debug("repository already present, pulling repo : %s" % (git_url))
+      command = "cd lab-data-service; git checkout develop;git pull"
+      (ret_code, output) = execute_command(command)
+      if ret_code == 0:
+	  current_app.logger.debug("Successfully pulls the repository : %s" % (git_url))
+	  return True
+      else:
+	  current_app.logger.debug("Failed to pulls the repository : %s" % (git_url))
+	  return False
 #+END_SRC
 
 ** Get repo_name
@@ -135,10 +148,7 @@ def push_docs(repo_name):
   try:
       copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
       current_app.logger.debug("copy command = %s" % copy_command)
-      command = (r'ssh -o "%s" "%s"' %
-		 (NO_STRICT_CHECKING, copy_command))
-      current_app.logger.debug("Command = %s" % command)
-      (ret_code, output) = execute_command(command)
+      (ret_code, output) = execute_command(copy_command)
       if ret_code == 0:
 	  current_app.logger.debug("Copy successful")
 	  return True
@@ -406,6 +416,7 @@ if __name__ == '__main__':
 <<imports_for_sources>>
 <<exec_commands>>
 <<clone_repo>>
+<<repo_exist>>
 <<get_repo_name>>
 <<build_repo>>
 <<create_issue>>
