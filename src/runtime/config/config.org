@@ -47,7 +47,7 @@ LOG_LEVEL = 10
 USERNAME = 'uname'
 PASSWORD = 'pswd'
 
-#Doc server destination path
+#Doc server location path
 DEST_DIR = '/var/www'
 
 # Doc server ip_address
