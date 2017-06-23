@@ -61,6 +61,12 @@ ELASTIC_DB_URL = "http://10.100.0.15:9200"
 USERNAME = 'uname'
 PASSWORD = 'pswd'
 
+#Doc server destination path
+DEST_DIR = '/var/www'
+
+# Doc server ip_address
+IP_ADDRESS = "root@10.4.12.63"
+  
 #+END_SRC
   
 * Tangling                                                      :boilerplate:

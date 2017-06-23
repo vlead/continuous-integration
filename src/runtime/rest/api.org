@@ -89,8 +89,9 @@ def get_repo_name(repo_url):
 
 def build_repo(repo_name):
    current_app.logger.debug("Running make command")
-   command = 'cd %s;make' % (repo_name)
-   if mk_cmd == 0:
+   mk_cmd = 'cd %s;make' % (repo_name)
+   (ret_code, output) = execute_command(mk_cmd)
+   if ret_code == 0:
         current_app.logger.debug("build generated successfully")
 	current_app.logger.debug("Creating github issue")
         ret_status = make_github_issue(repo_name, 'Build ran successfully', 'Body text', 'assigned_user', 3, ['build_passed'])
@@ -118,7 +119,7 @@ REPO_OWNER = "ksripathi"
 #REPO_NAME  = "lab-data-service"
 def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
     '''Create an issue on github.com using the given parameters.'''
-    # Our url to create issues via POST                                                                                                                                  
+    # Our url to create issues via POST                                     
     url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, repo_name)
     # Create an authenticated session to create the issue                                                                                                                
     session = requests.Session()
@@ -151,12 +152,9 @@ def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None
 #+BEGIN_SRC python
 
 def push_docs(repo_name):
-  src_dir = ("%s/build/docs" % (repo_name))
-  dest_dir = '/var/www'
-  NO_STRICT_CHECKING = "StrictHostKeyChecking no"
-  IP_ADDRESS = "root@10.4.12.63"
+  SRC_DIR = ("%s/build/docs" % (repo_name))
   try:
-      copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
+      copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR
       current_app.logger.debug("copy command = %s" % copy_command)
       (ret_code, output) = execute_command(copy_command)
       if ret_code == 0:
@@ -384,7 +382,7 @@ def ci_hook():
 import requests
 import json
 import subprocess
-from runtime.config.git_config import USERNAME, PASSWORD
+from runtime.config.git_config import USERNAME, PASSWORD, IP_ADDRESS, DEST_DIR
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
 from flask import Flask
