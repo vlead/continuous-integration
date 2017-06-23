@@ -22,7 +22,7 @@ class RepoClone:
     def __init__(self,git_url):
 	self.git_url = git_url
 
-    def repoCloner(): #clone_repo before  
+    def repoCloner(self): #clone_repo before  
 	repo_name = repoNameExtacter(self.git_url)
 	ret_val = isRepoExist(repo_name)
 
@@ -118,7 +118,7 @@ def linuxCommandExecuter(cmd):
 #+NAME: get_repo_name
 #+BEGIN_SRC python
 
-def repoNameExtacter(url): #extract_repo_name before
+def repoNameExtacter(repo_url): #extract_repo_name before
     try:
        repo_name = repo_url.split("/")[-1]
        current_app.logger.debug("repo_name %s" % (repo_name))
@@ -422,7 +422,7 @@ def ci_hook():
 
     if cmd_status == True:
 	repo_name = repoNameExtacter(git_url)  
-	rtb = RepoBuild()
+	rtb = RepoBuild(git_url)
 	status = rtb.repoBuilder(repo_name)
 
 	if status == True:
@@ -438,14 +438,31 @@ def ci_hook():
 		return jsonify(message)
 		
 	    else:
-		current_app.logger.error("Unable to copy docs to doc server")
-
+		message = {
+		          "status" : 500,
+			  "message" : "Unable to copy files to docs server")
+			  }
+	        current_app.logger.error("Message %s" % (message))
+		return jsonify(message)
+		
 	else:
-	    current_app.logger.error("Couldn't run build")
+            message = {
+	              "status" : 500,
+		      "message" : "Failed to run make file")
+		      }
+            current_app.logger.error("Message %s" % (message))
+	    return jsonify(message)
+	    
 
     else:
-	current_app.logger.error("Couldn't run clone")
-
+        message = {
+	          "status" : 500,
+		  "message" : "Failed to clone repo")
+		  }
+        current_app.logger.error("Message %s" % (message))
+	return jsonify(message)
+	
+   
 
 #+END_SRC
 
