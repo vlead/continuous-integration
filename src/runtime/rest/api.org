@@ -23,25 +23,25 @@ class RepoClone:
 	self.git_url = git_url
 
     def repoCloner(): #clone_repo before  
-	repo_name = repoNameExtacter(git_url)
+	repo_name = repoNameExtacter(self.git_url)
 	ret_val = isRepoExist(repo_name)
 
 	if not ret_val:
-	    command = "git clone %s; cd %s;git checkout develop;git pull" % (git_url, repo_name)
+	    command = "git clone %s; cd %s;git checkout develop;git pull" % (self.git_url, repo_name)
 	    current_app.logger.debug("Git clone command : %s" % (command))
 	    (ret_code, output) = linuxCommandExecuter(command)
 	    if ret_code == 0:
-		current_app.logger.debug("Successfully cloned repo : %s" % (git_url))
+		current_app.logger.debug("Successfully cloned repo : %s" % (self.git_url))
 		return True
 	else:
-	    current_app.logger.debug("repository already present, pulling repo : %s" % (git_url))
+	    current_app.logger.debug("repository already present, pulling repo : %s" % (self.git_url))
 	    command = "cd %s; git checkout develop;git pull" % (repo_name)
 	    (ret_code, output) = linuxCommandExecuter(command)
 	    if ret_code == 0:
-		current_app.logger.debug("Successfully pulls the repository : %s" % (git_url))
+		current_app.logger.debug("Successfully pulls the repository : %s" % (self.git_url))
 		return True
 	    else:
-		current_app.logger.debug("Failed to pulls the repository : %s" % (git_url))
+		current_app.logger.debug("Failed to pulls the repository : %s" % (self.git_url))
 		return False
 
 #+END_SRC
@@ -53,12 +53,13 @@ class RepoClone:
 
 class RepoBuild:
 
-    def __init__(self,url):
-	self.git_url = url
+    def __init__(self, git_url):
+	self.git_url = git_url
 
     '''This function is used to run the make commmand'''
-    def repoBuilder():#build_repo before
+    def repoBuilder(self, repo_name):#build_repo before
 	current_app.logger.debug("Running make command")
+	repo_name = repoNameExtacter(self.git_url)
 	mk_cmd = 'cd %s;make' % (repo_name)
 	(ret_code, output) = linuxCommandExecuter(mk_cmd)
 	if ret_code == 0:
@@ -128,13 +129,28 @@ def repoNameExtacter(url): #extract_repo_name before
 
 #+END_SRC
 
+** Extract git author name
+
+#+NAME: get_repo_author
+#+BEGIN_SRC python
+
+def repoNameExtacter(url): #extract_repo_name before
+    try:
+       repo_name = repo_url.split("/")[-1]
+       current_app.logger.debug("repo_name %s" % (repo_name))
+       return repo_name
+    except Exception as e:
+       current_app.logger.error("Exception %s" % (str(e)))
+       raise str(e)
+
+#+END_SRC
 
 ** Create issue on github repository
    - It extracts the data from the JSON recieved from the respective webhook. 
 #+NAME: create_issue
 #+BEGIN_SRC python
 
-REPO_OWNER = "ksripathi"
+REPO_OWNER = None
 def makeGithubIssue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
     url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, repo_name)
     try:
@@ -394,6 +410,8 @@ def ci_hook():
     elif request.method == 'POST':
 	repo_data = request.get_json()
 	git_url = repo_data['repository']['html_url']
+        global REPO_AUTHOR
+	REPO_AUTHOR = repo_data['repository']['owner']['login']
 	current_app.logger.debug("Git repository URL : %s" % (git_url))
 
     else:
