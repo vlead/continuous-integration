@@ -14,6 +14,77 @@
 
 * REST  
 
+** Class containg function to clone the reposirtory
+#+NAME: clone_repo
+#+BEGIN_SRC python
+class RepoClone:
+
+    def __init__(self,git_url):
+	self.git_url = git_url
+
+    def repoCloner(): #clone_repo before  
+	repo_name = repoNameExtacter(git_url)
+	ret_val = isRepoExist(repo_name)
+
+	if not ret_val:
+	    command = "git clone %s; cd %s;git checkout develop;git pull" % (git_url, repo_name)
+	    current_app.logger.debug("Git clone command : %s" % (command))
+	    (ret_code, output) = linuxCommandExecuter(command)
+	    if ret_code == 0:
+		current_app.logger.debug("Successfully cloned repo : %s" % (git_url))
+		return True
+	else:
+	    current_app.logger.debug("repository already present, pulling repo : %s" % (git_url))
+	    command = "cd %s; git checkout develop;git pull" % (repo_name)
+	    (ret_code, output) = linuxCommandExecuter(command)
+	    if ret_code == 0:
+		current_app.logger.debug("Successfully pulls the repository : %s" % (git_url))
+		return True
+	    else:
+		current_app.logger.debug("Failed to pulls the repository : %s" % (git_url))
+		return False
+
+#+END_SRC
+
+
+** Class containg the function to build the repository
+#+NAME: build_repo
+#+BEGIN_SRC python
+
+class RepoBuild:
+
+    def __init__(self,url):
+	self.git_url = url
+
+    '''This function is used to run the make commmand'''
+    def repoBuilder():#build_repo before
+	current_app.logger.debug("Running make command")
+	mk_cmd = 'cd %s;make' % (repo_name)
+	(ret_code, output) = linuxCommandExecuter(mk_cmd)
+	if ret_code == 0:
+	    current_app.logger.debug("build generated successfully")
+	    current_app.logger.debug("Creating github issue")
+	    ret_status = makeGithubIssue(repo_name, 'Build ran successfully', \
+	                                   'Build ran successfully and docs are moved to doc server', \
+                                           'assigned_user', 3, ['build_passed'])
+	    if ret_status:
+		current_app.logger.debug("Created github issue")
+		return True
+	    else:
+		current_app.logger.debug("Failed to create github issue")
+		return True
+	else:
+	    current_app.logger.debug("Couldn't generate build")
+	    current_app.logger.debug("Creating github issue")
+	    ret_status = makeGithubIssue(repo_name, 'Failed to run build', \
+                                           'Body text', 'assigned_user', 3, ['build_failed'])
+	    if ret_status:
+		current_app.logger.debug("Created github issue")
+		return False
+		
+#+END_SRC
+
+
 ** Execute shell commands
 
 #+NAME: exec_commands
@@ -64,7 +135,7 @@ def repoNameExtacter(url): #extract_repo_name before
 #+BEGIN_SRC python
 
 REPO_OWNER = "ksripathi"
-def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
+def makeGithubIssue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
     url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, repo_name)
     try:
 	session = requests.Session()
@@ -88,7 +159,6 @@ def make_github_issue(repo_name, title, body=None, assignee=None, milestone=None
     except Exception as e:
 	current_app.logger.error("Exception : %s" % str(e))
 	raise str(e)
-
 
 #+END_SRC
 
@@ -140,126 +210,8 @@ def isRepoExist(repo_name):
 #+END_SRC
 
 
-
-** Class containg function to clone the reposirtory
-#+NAME: clone_repo
-#+BEGIN_SRC python
-class RepoClone:
-
-    def __init__(self,git_url):
-	self.git_url = git_url
-
-    def repoCloner(): #clone_repo before  
-	repo_name = repoNameExtacter(git_url)
-	ret_val = isRepoExist(repo_name)
-
-	if not ret_val:
-	    command = "git clone %s; cd %s;git checkout develop;git pull" % (git_url, repo_name)
-	    current_app.logger.debug("Git clone command : %s" % (command))
-	    (ret_code, output) = linuxCommandExecuter(command)
-	    if ret_code == 0:
-		current_app.logger.debug("Successfully cloned repo : %s" % (git_url))
-		return True
-	else:
-	    current_app.logger.debug("repository already present, pulling repo : %s" % (git_url))
-	    command = "cd %s; git checkout develop;git pull" % (repo_name)
-	    (ret_code, output) = linuxCommandExecuter(command)
-	    if ret_code == 0:
-		current_app.logger.debug("Successfully pulls the repository : %s" % (git_url))
-		return True
-	    else:
-		current_app.logger.debug("Failed to pulls the repository : %s" % (git_url))
-		return False
-
-#+END_SRC
-
-
-
-
-** Class containg the function to build the repository
-#+NAME: build_repo
-#+BEGIN_SRC python
-
-
-class RepoBuild:
-
-    def __init__(self,url):
-	self.git_url = url
-
-    '''This function is used to run the make commmand'''
-    def repoBuilder():#build_repo before
-	current_app.logger.debug("Running make command")
-	mk_cmd = 'cd %s;make' % (repo_name)
-	(ret_code, output) = linuxCommandExecuter(mk_cmd)
-	if ret_code == 0:
-	    current_app.logger.debug("build generated successfully")
-	    current_app.logger.debug("Creating github issue")
-	    ret_status = make_github_issue(repo_name, 'Build ran successfully', \
-	                                   'Build ran successfully and docs are moved to doc server', \
-                                           'assigned_user', 3, ['build_passed'])
-	    if ret_status:
-		current_app.logger.debug("Created github issue")
-		return True
-	    else:
-		current_app.logger.debug("Failed to create github issue")
-		return True
-	else:
-	    current_app.logger.debug("Couldn't generate build")
-	    current_app.logger.debug("Creating github issue")
-	    ret_status = make_github_issue(repo_name, 'Failed to run build', \
-                                           'Body text', 'assigned_user', 3, ['build_failed'])
-	    if ret_status:
-		current_app.logger.debug("Created github issue")
-		return False
-		
-#+END_SRC
-
-
 ** API accepts the JSON sent by the git hub webhook via a POST request 
 
-#+BEGIN_SRC python
-@api.route("/ci_hook", methods = ['POST', 'GET'])
-def ci_hook():
-
-    if request.method == "GET":
-	return "Method not allowed"
-
-    elif request.method == 'POST':
-	repo_data = request.get_json()
-	git_url = repo_data['repository']['html_url']
-	current_app.logger.debug("Git repository URL : %s" % (git_url))
-
-    else:
-	return "Method not allowed"
-
-    repo = RepoClone(git_url)
-    cmd_status = repo.repoCloner()
-
-    if cmd_status == True:
-	repo_name = repoNameExtacter(git_url)  
-	rtb = RepoBuild()
-	status = rtb.repoBuilder(repo_name)
-
-	if status == True:
-	    status = docsPusher(repo_name)  
-
-	    if status == True:
-		current_app.logger.debug("Successfully copied the docs to doc server")
-		message = {
-	               "status_code" : 200,
-	               "message" : "Successfully copied docs to server" 
-		       }
-
-		return jsonify(message)
-		
-	    else:
-		current_app.logger.error("Unable to copy docs to doc server")
-
-	else:
-	    current_app.logger.error("Couldn't run build")
-
-    else:
-	current_app.logger.error("Couldn't run clone")
 
 #+END_SRC
 
@@ -417,7 +369,10 @@ def ci_hook():
     + Status_Code: 200
       + Contents :
 #+BEGIN_EXAMPLE
-to be updated
+{
+"status_code" : 200,
+"message" : "Successfully copied docs to server" 
+}
 #+END_EXAMPLE    
   - Error Response:
     + Contents :
@@ -472,6 +427,7 @@ def ci_hook():
 
     else:
 	current_app.logger.error("Couldn't run clone")
+
 
 #+END_SRC
 
