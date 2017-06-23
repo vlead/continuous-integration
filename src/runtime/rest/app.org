@@ -18,8 +18,7 @@ def create_app(config):
     # init our app
     app = Flask(__name__)
     app.secret_key = 'djfjsdkjXXS7979dfdfd'
-    # load config values from the config file
-#    app.config.from_object(config)
+   
 #    cors = CORS(app, resources={r"/*": {"origins": "*"}})
     # init sqlalchemy db instance
 #    db.init_app(app)
