@@ -40,7 +40,78 @@ def execute_command(cmd):
     return (return_code, output)
 #+END_SRC
 
+** Function to extract reposirtory name 
 
+#+NAME: get_repo_name
+#+BEGIN_SRC python
+
+
+def repoNameExtacter(url): #extract_repo_name before
+    repo_name = url.split("/")[-1]#write an example url
+    current_app.logger.debug("repo_name %s" % (repo_name))
+    return repo_name
+
+#+END_SRC
+** This function is used to raise an issue in the respective github repository.
+*** It uses extracts the data from the JSON recieved from the respective webhook. 
+#+NAME: create_issue
+#+BEGIN_SRC python
+REPO_OWNER = 
+REPO_NAME  = 
+
+def issueGenerator(title, body=None, assignee=None, milestone=None, labels=None):
+    '''Create an issue on github.com using the given parameters.'''
+    # Our url to create issues via POST                                                                                                                                  
+    url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, REPO_NAME)
+    # Create an authenticated session to create the issue                                                                                                                
+    session = requests.Session()
+    session.auth = (USERNAME, PASSWORD)
+    # Create our issue                                                                                                                                                   
+    issue = {'title': title,
+             'body': body,
+             'assignee': '',
+             'milestone': None,
+             'labels': [labels]
+             }
+    # Add the issue to our repository                                                                                                                                    
+    current_app.logger.debug("Creating github issue")
+    r = session.post(url, json.dumps(issue))
+    
+    if r.status_code == 201:
+        current_app.logger.debug("Successfully created Issue : %s" % title)
+    
+    else:
+        current_app.logger.error("Could not creat Issue : %s" % title)
+        current_app.logger.error("Response : %s" % r.content)
+
+
+
+#+END_SRC
+
+
+** This utility function is used to push the docs created after running the make file onto the docs folder.
+#+BEGIN_SRC python
+
+def docsPusher(repo_name):
+  src_dir = ("%s/build/docs" % (repo_name))
+  dest_dir = '/var/www'
+  NO_STRICT_CHECKING = "StrictHostKeyChecking no"
+  IP_ADDRESS = "root@10.4.12.63"
+  try:
+      copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
+      current_app.logger.debug("copy command = %s" % copy_command)
+      (ret_code, output) = execute_command(copy_command)
+      if ret_code == 0:
+	  current_app.logger.debug("Copy successful")
+	  return True
+      else:
+	  current_app.logger.debug("Copy Unsuccessful, return code is %s" % str(ret_code))
+	  return False
+  except Exception, e:
+      current_app.logger.error("ERROR = %s" % str(e))
+      return False
+
+#+END_SRC
 ** Repo_exist
 #+NAME: repo_exist
 #+BEGIN_SRC python
@@ -51,6 +122,8 @@ def repo_exist(repo_name):
     return ret_val
 
 #+END_SRC
+
+
 
 ** Class containg function to clone the reposirtory
 #+NAME: clone_repo
@@ -82,18 +155,7 @@ class RepoClone:
 
 #+END_SRC
 
-** Function to extract reposirtory name 
 
-#+NAME: get_repo_name
-#+BEGIN_SRC python
-
-
-def repoNameExtacter(url): #extract_repo_name before
-    repo_name = url.split("/")[-1]#write an example url
-    current_app.logger.debug("repo_name %s" % (repo_name))
-    return repo_name
-
-#+END_SRC
 
 
 ** Class containg the function to build the repository
@@ -112,12 +174,12 @@ class RepoBuild:
     (return_value, output) = execute_command('cd + ; make')
     
     if return_value == 0:
-      make_github_issue('Build ran successfully', 'Body text', 'assigned_user', 3, ['build_passed'])#change function name
+      issueGenerator('Build ran successfully', 'Body text', 'assigned_user', 3, ['build_passed'])#change function name
 	    current_app.logger.debug("make ran successfully")
 	    return True
     
     else:
-      make_github_issue('Failed to run build', 'Body text', 'assigned_user', 3, ['build_failed'])#arguments doubt?
+      issueGenerator('Failed to run build', 'Body text', 'assigned_user', 3, ['build_failed'])#arguments doubt?
 	    current_app.logger.debug("Failed to run make")
 	    return False
 
@@ -125,71 +187,48 @@ class RepoBuild:
 #+END_SRC
 
 
-** Create github issue
-   
-#+NAME: create_issue
-#+BEGIN_SRC python
-REPO_OWNER = "ksripathi"
-#REPO_NAME  = "lab-data-service"
-
-def make_github_issue(title, body=None, assignee=None, milestone=None, labels=None):
-    '''Create an issue on github.com using the given parameters.'''
-    # Our url to create issues via POST                                                                                                                                  
-    url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, REPO_NAME)
-    # Create an authenticated session to create the issue                                                                                                                
-    session = requests.Session()
-    session.auth = (USERNAME, PASSWORD)
-    # Create our issue                                                                                                                                                   
-    issue = {'title': title,
-             'body': body,
-             'assignee': '',
-             'milestone': None,
-             'labels': [labels]
-             }
-    # Add the issue to our repository                                                                                                                                    
-    current_app.logger.debug("Creating github issue")
-    r = session.post(url, json.dumps(issue))
-    
-    if r.status_code == 201:
-        current_app.logger.debug("Successfully created Issue : %s" % title)
-    
-    else:
-        current_app.logger.error("Could not creat Issue : %s" % title)
-        current_app.logger.error("Response : %s" % r.content)
-
-
-
-#+END_SRC
-
-
-** Push the docs file
-
-#+NAME: push_docs
-#+BEGIN_SRC python
-
-def push_docs(repo_name):
-  src_dir = ("%s/build/docs" % (repo_name))
-  dest_dir = '/var/www'
-  NO_STRICT_CHECKING = "StrictHostKeyChecking no"
-  IP_ADDRESS = "root@10.4.12.63"
-  try:
-      copy_command = "rsync -arz --progress " + src_dir + " " + IP_ADDRESS + ":" + dest_dir
-      current_app.logger.debug("copy command = %s" % copy_command)
-      (ret_code, output) = execute_command(copy_command)
-      if ret_code == 0:
-	  current_app.logger.debug("Copy successful")
-	  return True
-      else:
-	  current_app.logger.debug("Copy Unsuccessful, return code is %s" % str(ret_code))
-	  return False
-  except Exception, e:
-      current_app.logger.error("ERROR = %s" % str(e))
-      return False
-
-#+END_SRC
-
-
 ** API accepts the JSON sent by the git hub webhook via a POST request 
+
+#+BEGIN_SRC python
+@api.route("/ci_hook", methods = ['POST', 'GET'])
+def ci_hook():
+
+  if request.method == "GET":
+      return "Method not allowed"
+
+  elif request.method == 'POST':
+    repo_data = request.get_json()
+    git_url = repo_data['repository']['html_url']
+    current_app.logger.debug("Git repository URL : %s" % (git_url))
+  
+  else:
+      return "Method not allowed"
+
+  repo = repoClone(git_url)
+  cmd_status = repo.RepoCloner()
+  
+  if cmd_status == True:
+     repo_name = repoNameExtacter(git_url)  
+     rtb = RepoBuild
+     status = rtb.repoBuilder(repo_name)
+     
+     if status == True:
+        status = docsPusher(repo_name)  
+        
+        if status == True:
+          current_app.logger.debug("Successfully copied the docs to doc server")
+          return "Successfully copied files to doc server"
+   
+        else:
+          current_app.logger.error("Unable to copy docs to doc server")
+     
+     else:
+      current_app.logger.error("Couldn't run build")
+
+  else:
+      current_app.logger.error("Couldn't run clone")
+  #+END_SRC
+
 *** API Design
   :PROPERTIES:
   :CUSTOM_ID: ci_hook_api
