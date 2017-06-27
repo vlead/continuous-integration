@@ -14,7 +14,10 @@
 
 * REST  
 
-** Class containg function to clone the reposirtory
+** Clone repository
+   This class contains a function to clone the github reposirtory if
+   repository already exists it pulls the code
+   
 #+NAME: clone_repo
 #+BEGIN_SRC python
 class RepoClone:
@@ -47,7 +50,10 @@ class RepoClone:
 #+END_SRC
 
 
-** Class containg the function to build the repository
+** Build the project
+   - This Class contains the function to build the repository and if
+     build is failed/success it creates the issue and assigns label to
+     it.
 #+NAME: build_repo
 #+BEGIN_SRC python
 
@@ -87,7 +93,8 @@ class RepoBuild:
 
 
 ** Execute shell commands
-
+   This function executes the linux command and returns the output and
+   return code.
 #+NAME: exec_commands
 #+BEGIN_SRC python
 
@@ -114,7 +121,8 @@ def linuxCommandExecuter(cmd):
 
 
 ** Extract git repository name 
-
+   This function takes github repository url as input argumentand
+   computes repository name and returns it
 #+NAME: get_repo_name
 #+BEGIN_SRC python
 
@@ -130,15 +138,17 @@ def repoNameExtacter(repo_url): #extract_repo_name before
 #+END_SRC
 
 ** Extract git author name
+   This function takes github repository url as input argument and
+   computes the author (organization) name and returns it.
 
 #+NAME: get_repo_author
 #+BEGIN_SRC python
 
-def repoNameExtacter(url): #extract_repo_name before
+def repoAuthorNameExtacter(url):
     try:
-       repo_name = repo_url.split("/")[-1]
-       current_app.logger.debug("repo_name %s" % (repo_name))
-       return repo_name
+       author_name = repo_url.split("/")[-2]
+       current_app.logger.debug("author_name %s" % (author_name))
+       return author_name
     except Exception as e:
        current_app.logger.error("Exception %s" % (str(e)))
        raise str(e)
@@ -146,7 +156,8 @@ def repoNameExtacter(url): #extract_repo_name before
 #+END_SRC
 
 ** Create issue on github repository
-   - It extracts the data from the JSON recieved from the respective webhook. 
+   - It extracts the data from the JSON recieved from the respective
+     webhook.
 #+NAME: create_issue
 #+BEGIN_SRC python
 
@@ -412,6 +423,7 @@ def ci_hook():
 	git_url = repo_data['repository']['html_url']
         global REPO_AUTHOR
 	REPO_AUTHOR = repo_data['repository']['owner']['login']
+	current_app.logger.debug("Git repository author name : %s" % (REPO_AUTHOR))
 	current_app.logger.debug("Git repository URL : %s" % (git_url))
 
     else:
