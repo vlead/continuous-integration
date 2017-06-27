@@ -52,11 +52,7 @@ DEST_DIR = '/var/www'
 
 # Doc server ip_address
 IP_ADDRESS = "root@ipaddress"
-<<<<<<< HEAD
 
-=======
-  
->>>>>>> a71871c72902b5ccaad71a4fb2c8633ada4c0fa5
 #+END_SRC
   
 

@@ -26,7 +26,7 @@ class RepoClone:
 	self.git_url = git_url
 
     def repoCloner(self): #clone_repo before  
-	repo_name = repoNameExtacter(self.git_url)
+	(repo_name, repo_author) = repoNameExtacter(self.git_url)
 	ret_val = isRepoExist(repo_name)
 
 	if not ret_val:
@@ -63,15 +63,15 @@ class RepoBuild:
 	self.git_url = git_url
 
     '''This function is used to run the make commmand'''
-    def repoBuilder(self, repo_name):#build_repo before
+    def repoBuilder(self, git_url):#build_repo before
 	current_app.logger.debug("Running make command")
-	repo_name = repoNameExtacter(self.git_url)
+	(repo_name, repo_author) = repoNameExtacter(self.git_url)
 	mk_cmd = 'cd %s;make' % (repo_name)
 	(ret_code, output) = linuxCommandExecuter(mk_cmd)
 	if ret_code == 0:
 	    current_app.logger.debug("build generated successfully")
 	    current_app.logger.debug("Creating github issue")
-	    ret_status = makeGithubIssue(repo_name, 'Build ran successfully', \
+	    ret_status = makeGithubIssue(repo_author, repo_name, 'Build ran successfully', \
 	                                   'Build ran successfully and docs are moved to doc server', \
                                            'assigned_user', 3, ['build_passed'])
 	    if ret_status:
@@ -83,7 +83,7 @@ class RepoBuild:
 	else:
 	    current_app.logger.debug("Couldn't generate build")
 	    current_app.logger.debug("Creating github issue")
-	    ret_status = makeGithubIssue(repo_name, 'Failed to run build', \
+	    ret_status = makeGithubIssue(repo_author, repo_name, 'Failed to run build', \
                                            'Body text', 'assigned_user', 3, ['build_failed'])
 	    if ret_status:
 		current_app.logger.debug("Created github issue")
@@ -129,13 +129,15 @@ def linuxCommandExecuter(cmd):
 def repoNameExtacter(repo_url): #extract_repo_name before
     try:
        repo_name = repo_url.split("/")[-1]
-       current_app.logger.debug("repo_name %s" % (repo_name))
-       return repo_name
+       author_name = repo_url.split("/")[-2]
+       current_app.logger.debug("repo_name %s, author_name" % (repo_name, author_name))
+       return (repo_name, author_name)
     except Exception as e:
        current_app.logger.error("Exception %s" % (str(e)))
        raise str(e)
 
 #+END_SRC
+
 
 ** Extract git author name
    This function takes github repository url as input argument and
@@ -155,6 +157,7 @@ def repoAuthorNameExtacter(url):
 
 #+END_SRC
 
+
 ** Create issue on github repository
    - It extracts the data from the JSON recieved from the respective
      webhook.
@@ -162,8 +165,8 @@ def repoAuthorNameExtacter(url):
 #+BEGIN_SRC python
 
 REPO_OWNER = None
-def makeGithubIssue(repo_name, title, body=None, assignee=None, milestone=None, labels=None):
-    url = 'https://api.github.com/repos/%s/%s/issues' % (REPO_OWNER, repo_name)
+def makeGithubIssue(repo_author, repo_name, title, body=None, assignee=None, milestone=None, labels=None):
+    url = 'https://api.github.com/repos/%s/%s/issues' % (repo_author, repo_name)
     try:
 	session = requests.Session()
 	session.auth = (USERNAME, PASSWORD)
@@ -421,9 +424,6 @@ def ci_hook():
     elif request.method == 'POST':
 	repo_data = request.get_json()
 	git_url = repo_data['repository']['html_url']
-        global REPO_AUTHOR
-	REPO_AUTHOR = repo_data['repository']['owner']['login']
-	current_app.logger.debug("Git repository author name : %s" % (REPO_AUTHOR))
 	current_app.logger.debug("Git repository URL : %s" % (git_url))
 
     else:
@@ -433,9 +433,9 @@ def ci_hook():
     cmd_status = repo.repoCloner()
 
     if cmd_status == True:
-	repo_name = repoNameExtacter(git_url)  
+	(repo_name, repo_author) = repoNameExtacter(git_url)  
 	rtb = RepoBuild(git_url)
-	status = rtb.repoBuilder(repo_name)
+	status = rtb.repoBuilder(git_url)
 
 	if status == True:
 	    status = docsPusher(repo_name)  
@@ -452,7 +452,7 @@ def ci_hook():
 	    else:
 		message = {
 		          "status" : 500,
-			  "message" : "Unable to copy files to docs server")
+			  "message" : "Unable to copy files to docs server"
 			  }
 	        current_app.logger.error("Message %s" % (message))
 		return jsonify(message)
@@ -460,7 +460,7 @@ def ci_hook():
 	else:
             message = {
 	              "status" : 500,
-		      "message" : "Failed to run make file")
+		      "message" : "Failed to run make file"
 		      }
             current_app.logger.error("Message %s" % (message))
 	    return jsonify(message)
@@ -469,7 +469,7 @@ def ci_hook():
     else:
         message = {
 	          "status" : 500,
-		  "message" : "Failed to clone repo")
+		  "message" : "Failed to clone repo"
 		  }
         current_app.logger.error("Message %s" % (message))
 	return jsonify(message)
