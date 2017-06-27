@@ -12,11 +12,13 @@
   Integration tool
 * Functional Requirements
 ** Req1
-   - Pull the github repository when a new release/tag made
+   - Build the sources of github repository whenever a new release/tag
+     made
 ** Req2
    - Run the unit test cases when new releae/tag made on github
 ** Req3
-   - Report the errors generated incase certain testcases failed to run
+   - Report the errors generated incase certain testcases failed to
+     run by means of creating issues on respective github repository
 ** Req4
    - Host the documentation of service/lab in document server
 * Reference Open source tools

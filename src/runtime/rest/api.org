@@ -84,7 +84,7 @@ class RepoBuild:
 	    current_app.logger.debug("Couldn't generate build")
 	    current_app.logger.debug("Creating github issue")
 	    ret_status = makeGithubIssue(repo_author, repo_name, 'Failed to run build', \
-                                           'Body text', 'assigned_user', 3, ['build_failed'])
+                                           'Failed to run build', 'assigned_user', 3, ['build_failed'])
 	    if ret_status:
 		current_app.logger.debug("Created github issue")
 		return False
