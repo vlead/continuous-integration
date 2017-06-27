@@ -130,7 +130,7 @@ def repoNameExtacter(repo_url): #extract_repo_name before
     try:
        repo_name = repo_url.split("/")[-1]
        author_name = repo_url.split("/")[-2]
-       current_app.logger.debug("repo_name %s, author_name" % (repo_name, author_name))
+       current_app.logger.debug("repo_name %s, author_name = %s" % (repo_name, author_name))
        return (repo_name, author_name)
     except Exception as e:
        current_app.logger.error("Exception %s" % (str(e)))
@@ -167,6 +167,9 @@ def repoAuthorNameExtacter(url):
 REPO_OWNER = None
 def makeGithubIssue(repo_author, repo_name, title, body=None, assignee=None, milestone=None, labels=None):
     url = 'https://api.github.com/repos/%s/%s/issues' % (repo_author, repo_name)
+    if (repo_author != "vlead") or (repo_author != "virtual-labs"):
+        abort(401, "Unauthorized repository")
+
     try:
 	session = requests.Session()
 	session.auth = (USERNAME, PASSWORD)
@@ -201,9 +204,9 @@ def makeGithubIssue(repo_author, repo_name, title, body=None, assignee=None, mil
 #+BEGIN_SRC python
 
 def docsPusher(repo_name):
-    SRC_DIR = ("%s/build/docs" % (repo_name))
+    SRC_DIR = ("%s/build/docs/" % (repo_name))
     try:
-        copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR
+        copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
         current_app.logger.debug("copy command = %s" % copy_command)
         (ret_code, output) = linuxCommandExecuter(copy_command)
         if ret_code == 0:
@@ -505,7 +508,7 @@ class TestWebHook(TestCase):
 		"type": "Repository",
 		"id": 14493403,
 		"name": "web",
-		"active": true,
+		"active": "true",
 		"events": [
 		    "push"
 		],
@@ -520,9 +523,9 @@ class TestWebHook(TestCase):
 		"test_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403/test",
 		"ping_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403/pings",
 		"last_response": {
-		    "code": null,
+		    "code": "null",
 		    "status": "unused",
-		    "message": null
+		    "message": "null"
 		}
 	    },
 	    "repository": {
@@ -546,12 +549,12 @@ class TestWebHook(TestCase):
 		    "events_url": "https://api.github.com/users/ksripathi/events{/privacy}",
 		    "received_events_url": "https://api.github.com/users/ksripathi/received_events",
 		    "type": "User",
-		    "site_admin": false
+		    "site_admin": "false"
 		},
-		"private": false,
+		"private": "false",
 		"html_url": "https://github.com/ksripathi/lab-data-service",
-		"description": null,
-		"fork": true,
+		"description": "null",
+		"fork": "true",
 		"url": "https://api.github.com/repos/ksripathi/lab-data-service",
 		"forks_url": "https://api.github.com/repos/ksripathi/lab-data-service/forks",
 		"keys_url": "https://api.github.com/repos/ksripathi/lab-data-service/keys{/key_id}",
@@ -587,7 +590,7 @@ class TestWebHook(TestCase):
 		"milestones_url": "https://api.github.com/repos/ksripathi/lab-data-service/milestones{/number}",
 		"notifications_url": "https://api.github.com/repos/ksripathi/lab-data-service/notifications{?since,all,participating}",
 		"labels_url": "https://api.github.com/repos/ksripathi/lab-data-service/labels{/name}",
-		"releases_url": "https://api.github.com/repos/ksripathi/lab-data-service/releases{/id}",`
+		"releases_url": "https://api.github.com/repos/ksripathi/lab-data-service/releases{/id}",
 		"deployments_url": "https://api.github.com/repos/ksripathi/lab-data-service/deployments",
 		"created_at": "2017-06-07T04:04:59Z",
 		"updated_at": "2017-06-07T04:05:00Z",
@@ -596,18 +599,18 @@ class TestWebHook(TestCase):
 		"ssh_url": "git@github.com:ksripathi/lab-data-service.git",
 		"clone_url": "https://github.com/ksripathi/lab-data-service.git",
 		"svn_url": "https://github.com/ksripathi/lab-data-service",
-		"homepage": null,
+		"homepage": "null",
 		"size": 8979,
 		"stargazers_count": 0,
 		"watchers_count": 0,
 		"language": "Shell",
-		"has_issues": false,
-		"has_projects": true,
-		"has_downloads": true,
-		"has_wiki": true,
-		"has_pages": false,
+		"has_issues": "false",
+		"has_projects": "true",
+		"has_downloads": "true",
+		"has_wiki": "true",
+		"has_pages": "false",
 		"forks_count": 0,
-		"mirror_url": null,
+		"mirror_url": "null",
 		"open_issues_count": 0,
 		"forks": 0,
 		"open_issues": 0,
@@ -631,7 +634,7 @@ class TestWebHook(TestCase):
 		"events_url": "https://api.github.com/users/ksripathi/events{/privacy}",
 		"received_events_url": "https://api.github.com/users/ksripathi/received_events",
 		"type": "User",
-		"site_admin": false
+		"site_admin": "false"
 	    }
 	}
 
@@ -641,6 +644,7 @@ class TestWebHook(TestCase):
 	self.assertEqual(response.status_code, 200)
 
 #+END_SRC
+
 * Infra                                                         :boilerplate:
   
 ** sources
