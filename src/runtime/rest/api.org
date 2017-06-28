@@ -1030,6 +1030,71 @@ class TestBuildWebHook(TestCase):
 
 #+END_SRC
 
+
+** Unit test for clone feature
+   #+BEGIN_SRC python
+import unittest
+from flask_testing import TestCase
+from runtime.rest.app import create_app
+from runtime.rest.api import *
+
+class TestClone(TestCase):
+	TESTING = True
+
+	def create_app(self):
+	app = create_app(config)
+	return app
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+	def testCiClone(self):
+		print "Unit testing the cloning feature"
+
+	        url = "https://github.com/vlead/continuous-integration.git"
+	        rc = repoClone(url)
+	        self.assertEqual(rc.repoCloner(), True)
+
+	if __name__ == '__main__':
+         unittest.main()
+   
+   #+END_SRC
+
+** Unit test for build feature
+   #+BEGIN_SRC python
+   import unittest
+from flask_testing import TestCase
+from runtime.rest.app import create_app
+from runtime.rest.api import *
+
+class TestBuild(TestCase):
+	
+	TESTING = True
+
+	def create_app(self):
+	app = create_app(config)
+	return app
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+	def testCiBuild(self):
+		print "Unit testing the build feature"
+	        url = "https://github.com/vlead/continuous-integration.git"
+	
+	        rb = repoBuild(url)
+	        self.asserEqual(rb.repoBuilder(), True)
+
+	if __name__ == '__main__':
+         unittest.main()
+   
+   #+END_SRC
 * Infra                                                         :boilerplate:
   
 ** sources
@@ -1096,6 +1161,8 @@ if __name__ == '__main__':
 #+BEGIN_SRC python :tangle test_api.py :eval no :noweb yes
 <<imports_for_tests>>
 <<test_ci_hook>>
+<<testCiBuild>>
+<<testCiClone>>
 <<test_build_sources>>
 <<run_test_cases>>
 #+end_src
