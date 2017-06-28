@@ -245,9 +245,6 @@ def isRepoExist(repo_name):
 
 ** API accepts the JSON sent by the git hub webhook via a POST request 
 
-
-#+END_SRC
-
 *** API Design
   :PROPERTIES:
   :CUSTOM_ID: ci_hook_api
@@ -645,6 +642,394 @@ class TestWebHook(TestCase):
 
 #+END_SRC
 
+
+** API to build the souces of github repository
+
+*** API Design
+  :PROPERTIES:
+  :CUSTOM_ID: ci_hook_api
+  :END:    
+  - URL :: /build_sources
+
+  - Method :: POST
+
+  - URL Params ::  None
+
+  - Payload :: 
+#+BEGIN_EXAMPLE
+    {
+      "zen": "Responsive is better than fast.",
+      "hook_id": 14493403,
+      "hook": {
+        "type": "Repository",
+        "id": 14493403,
+        "name": "web",
+        "active": true,
+        "events": [
+          "push"
+        ],
+        "config": {
+          "content_type": "json",
+          "insecure_ssl": "0",
+          "url": "http://ci.vlabs.ac.in:5000/git"
+        },
+        "updated_at": "2017-06-21T09:35:07Z",
+        "created_at": "2017-06-21T09:35:07Z",
+        "url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403",
+        "test_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403/test",
+        "ping_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403/pings",
+        "last_response": {
+          "code": null,
+          "status": "unused",
+          "message": null
+        }
+      },
+      "repository": {
+        "id": 93591178,
+        "name": "lab-data-service",
+        "full_name": "ksripathi/lab-data-service",
+        "owner": {
+          "login": "ksripathi",
+          "id": 8774380,
+          "avatar_url": "https://avatars3.githubusercontent.com/u/8774380?v=3",
+          "gravatar_id": "",
+          "url": "https://api.github.com/users/ksripathi",
+          "html_url": "https://github.com/ksripathi",
+          "followers_url": "https://api.github.com/users/ksripathi/followers",
+          "following_url": "https://api.github.com/users/ksripathi/following{/other_user}",
+          "gists_url": "https://api.github.com/users/ksripathi/gists{/gist_id}",
+          "starred_url": "https://api.github.com/users/ksripathi/starred{/owner}{/repo}",
+          "subscriptions_url": "https://api.github.com/users/ksripathi/subscriptions",
+          "organizations_url": "https://api.github.com/users/ksripathi/orgs",
+          "repos_url": "https://api.github.com/users/ksripathi/repos",
+          "events_url": "https://api.github.com/users/ksripathi/events{/privacy}",
+          "received_events_url": "https://api.github.com/users/ksripathi/received_events",
+          "type": "User",
+          "site_admin": false
+        },
+        "private": false,
+        "html_url": "https://github.com/ksripathi/lab-data-service",
+        "description": null,
+        "fork": true,
+        "url": "https://api.github.com/repos/ksripathi/lab-data-service",
+        "forks_url": "https://api.github.com/repos/ksripathi/lab-data-service/forks",
+        "keys_url": "https://api.github.com/repos/ksripathi/lab-data-service/keys{/key_id}",
+        "collaborators_url": "https://api.github.com/repos/ksripathi/lab-data-service/collaborators{/collaborator}",
+        "teams_url": "https://api.github.com/repos/ksripathi/lab-data-service/teams",
+        "hooks_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks",
+        "issue_events_url": "https://api.github.com/repos/ksripathi/lab-data-service/issues/events{/number}",
+        "events_url": "https://api.github.com/repos/ksripathi/lab-data-service/events",
+        "assignees_url": "https://api.github.com/repos/ksripathi/lab-data-service/assignees{/user}",
+        "branches_url": "https://api.github.com/repos/ksripathi/lab-data-service/branches{/branch}",
+        "tags_url": "https://api.github.com/repos/ksripathi/lab-data-service/tags",
+        "blobs_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/blobs{/sha}",
+        "git_tags_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/tags{/sha}",
+        "git_refs_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/refs{/sha}",
+        "trees_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/trees{/sha}",
+        "statuses_url": "https://api.github.com/repos/ksripathi/lab-data-service/statuses/{sha}",
+        "languages_url": "https://api.github.com/repos/ksripathi/lab-data-service/languages",
+        "stargazers_url": "https://api.github.com/repos/ksripathi/lab-data-service/stargazers",
+        "contributors_url": "https://api.github.com/repos/ksripathi/lab-data-service/contributors",
+        "subscribers_url": "https://api.github.com/repos/ksripathi/lab-data-service/subscribers",
+        "subscription_url": "https://api.github.com/repos/ksripathi/lab-data-service/subscription",
+        "commits_url": "https://api.github.com/repos/ksripathi/lab-data-service/commits{/sha}",
+        "git_commits_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/commits{/sha}",
+        "comments_url": "https://api.github.com/repos/ksripathi/lab-data-service/comments{/number}",
+        "issue_comment_url": "https://api.github.com/repos/ksripathi/lab-data-service/issues/comments{/number}",
+        "contents_url": "https://api.github.com/repos/ksripathi/lab-data-service/contents/{+path}",
+        "compare_url": "https://api.github.com/repos/ksripathi/lab-data-service/compare/{base}...{head}",
+        "merges_url": "https://api.github.com/repos/ksripathi/lab-data-service/merges",
+        "archive_url": "https://api.github.com/repos/ksripathi/lab-data-service/{archive_format}{/ref}",
+        "downloads_url": "https://api.github.com/repos/ksripathi/lab-data-service/downloads",
+        "issues_url": "https://api.github.com/repos/ksripathi/lab-data-service/issues{/number}",
+        "pulls_url": "https://api.github.com/repos/ksripathi/lab-data-service/pulls{/number}",
+        "milestones_url": "https://api.github.com/repos/ksripathi/lab-data-service/milestones{/number}",
+        "notifications_url": "https://api.github.com/repos/ksripathi/lab-data-service/notifications{?since,all,participating}",
+        "labels_url": "https://api.github.com/repos/ksripathi/lab-data-service/labels{/name}",
+        "releases_url": "https://api.github.com/repos/ksripathi/lab-data-service/releases{/id}",
+        "deployments_url": "https://api.github.com/repos/ksripathi/lab-data-service/deployments",
+        "created_at": "2017-06-07T04:04:59Z",
+        "updated_at": "2017-06-07T04:05:00Z",
+        "pushed_at": "2017-06-08T11:11:07Z",
+        "git_url": "git://github.com/ksripathi/lab-data-service.git",
+        "ssh_url": "git@github.com:ksripathi/lab-data-service.git",
+        "clone_url": "https://github.com/ksripathi/lab-data-service.git",
+        "svn_url": "https://github.com/ksripathi/lab-data-service",
+        "homepage": null,
+        "size": 8979,
+        "stargazers_count": 0,
+        "watchers_count": 0,
+        "language": "Shell",
+        "has_issues": false,
+        "has_projects": true,
+        "has_downloads": true,
+        "has_wiki": true,
+        "has_pages": false,
+        "forks_count": 0,
+        "mirror_url": null,
+        "open_issues_count": 0,
+        "forks": 0,
+        "open_issues": 0,
+        "watchers": 0,
+        "default_branch": "master"
+      },
+      "sender": {
+        "login": "ksripathi",
+        "id": 8774380,
+        "avatar_url": "https://avatars3.githubusercontent.com/u/8774380?v=3",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/ksripathi",
+        "html_url": "https://github.com/ksripathi",
+        "followers_url": "https://api.github.com/users/ksripathi/followers",
+        "following_url": "https://api.github.com/users/ksripathi/following{/other_user}",
+        "gists_url": "https://api.github.com/users/ksripathi/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/ksripathi/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/ksripathi/subscriptions",
+        "organizations_url": "https://api.github.com/users/ksripathi/orgs",
+        "repos_url": "https://api.github.com/users/ksripathi/repos",
+        "events_url": "https://api.github.com/users/ksripathi/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/ksripathi/received_events",
+        "type": "User",
+        "site_admin": false
+      }
+    }
+
+#+END_EXAMPLE
+  - Success Response
+    + Status_Code: 200
+      + Contents :
+#+BEGIN_EXAMPLE
+{
+"status_code" : 200,
+"message" : "Successfully build the sources" 
+}
+#+END_EXAMPLE    
+  - Error Response:
+    + Contents :
+      {"status" : "error"}
+    
+  - Example:
+#+BEGIN_EXAMPLE
+ http://localhost:5000/build_sources
+#+END_EXAMPLE
+*** Implementation   
+#+NAME: ci_hook
+#+BEGIN_SRC python
+@api.route("/build_sources", methods = ['POST', 'GET'])
+def ci_hook():
+
+    if request.method == "GET":
+	return "Method not allowed"
+
+    elif request.method == 'POST':
+	repo_data = request.get_json()
+	git_url = repo_data['repository']['html_url']
+	current_app.logger.debug("Git repository URL : %s" % (git_url))
+
+    else:
+	return "Method not allowed"
+
+    repo = RepoClone(git_url)
+    cmd_status = repo.repoCloner()
+
+    if cmd_status == True:
+	(repo_name, repo_author) = repoNameExtacter(git_url)  
+	rtb = RepoBuild(git_url)
+	status = rtb.repoBuilder(git_url)
+
+	if status == True:
+	    message = {
+	              "status" : 200,
+		      "message" : "Successfully build the sources"
+		      }
+            current_app.logger.debug("Message %s" % (message))
+	    return jsonify(message)
+		
+	else:
+            message = {
+	              "status" : 500,
+		      "message" : "Failed to run make file"
+		      }
+            current_app.logger.error("Message %s" % (message))
+	    return jsonify(message)
+	    
+
+    else:
+        message = {
+	          "status" : 500,
+		  "message" : "Failed to clone repo"
+		  }
+        current_app.logger.error("Message %s" % (message))
+	return jsonify(message)
+	
+   
+
+#+END_SRC
+
+*** Test Cases
+**** Test webhook REST API
+#+NAME: test_build_sources
+#+BEGIN_SRC python
+class TestBuildWebHook(TestCase):
+    TESTING = True
+    def create_app(self):
+	app = create_app(config)
+	return app
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def test_ci_web_hook(self):
+	print "test_ci_web_hook"
+
+	headers = {'Content-Type': 'application/json'}
+	payload = {
+	    "zen": "Responsive is better than fast.",
+	    "hook_id": 14493403,
+	    "hook": {
+		"type": "Repository",
+		"id": 14493403,
+		"name": "web",
+		"active": "true",
+		"events": [
+		    "push"
+		],
+		"config": {
+		    "content_type": "json",
+		    "insecure_ssl": "0",
+		    "url": "http://ci.vlabs.ac.in:5000/git"
+		},
+		"updated_at": "2017-06-21T09:35:07Z",
+		"created_at": "2017-06-21T09:35:07Z",
+		"url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403",
+		"test_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403/test",
+		"ping_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks/14493403/pings",
+		"last_response": {
+		    "code": "null",
+		    "status": "unused",
+		    "message": "null"
+		}
+	    },
+	    "repository": {
+		"id": 93591178,
+		"name": "lab-data-service",
+		"full_name": "ksripathi/lab-data-service",
+		"owner": {
+		    "login": "ksripathi",
+		    "id": 8774380,
+		    "avatar_url": "https://avatars3.githubusercontent.com/u/8774380?v=3",
+		    "gravatar_id": "",
+		    "url": "https://api.github.com/users/ksripathi",
+		    "html_url": "https://github.com/ksripathi",
+		    "followers_url": "https://api.github.com/users/ksripathi/followers",
+		    "following_url": "https://api.github.com/users/ksripathi/following{/other_user}",
+		    "gists_url": "https://api.github.com/users/ksripathi/gists{/gist_id}",
+		    "starred_url": "https://api.github.com/users/ksripathi/starred{/owner}{/repo}",
+		    "subscriptions_url": "https://api.github.com/users/ksripathi/subscriptions",
+		    "organizations_url": "https://api.github.com/users/ksripathi/orgs",
+		    "repos_url": "https://api.github.com/users/ksripathi/repos",
+		    "events_url": "https://api.github.com/users/ksripathi/events{/privacy}",
+		    "received_events_url": "https://api.github.com/users/ksripathi/received_events",
+		    "type": "User",
+		    "site_admin": "false"
+		},
+		"private": "false",
+		"html_url": "https://github.com/ksripathi/lab-data-service",
+		"description": "null",
+		"fork": "true",
+		"url": "https://api.github.com/repos/ksripathi/lab-data-service",
+		"forks_url": "https://api.github.com/repos/ksripathi/lab-data-service/forks",
+		"keys_url": "https://api.github.com/repos/ksripathi/lab-data-service/keys{/key_id}",
+		"collaborators_url": "https://api.github.com/repos/ksripathi/lab-data-service/collaborators{/collaborator}",
+		"teams_url": "https://api.github.com/repos/ksripathi/lab-data-service/teams",
+		"hooks_url": "https://api.github.com/repos/ksripathi/lab-data-service/hooks",
+		"issue_events_url": "https://api.github.com/repos/ksripathi/lab-data-service/issues/events{/number}",
+		"events_url": "https://api.github.com/repos/ksripathi/lab-data-service/events",
+		"assignees_url": "https://api.github.com/repos/ksripathi/lab-data-service/assignees{/user}",
+		"branches_url": "https://api.github.com/repos/ksripathi/lab-data-service/branches{/branch}",
+		"tags_url": "https://api.github.com/repos/ksripathi/lab-data-service/tags",
+		"blobs_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/blobs{/sha}",
+		"git_tags_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/tags{/sha}",
+		"git_refs_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/refs{/sha}",
+		"trees_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/trees{/sha}",
+		"statuses_url": "https://api.github.com/repos/ksripathi/lab-data-service/statuses/{sha}",
+		"languages_url": "https://api.github.com/repos/ksripathi/lab-data-service/languages",
+		"stargazers_url": "https://api.github.com/repos/ksripathi/lab-data-service/stargazers",
+		"contributors_url": "https://api.github.com/repos/ksripathi/lab-data-service/contributors",
+		"subscribers_url": "https://api.github.com/repos/ksripathi/lab-data-service/subscribers",
+		"subscription_url": "https://api.github.com/repos/ksripathi/lab-data-service/subscription",
+		"commits_url": "https://api.github.com/repos/ksripathi/lab-data-service/commits{/sha}",
+		"git_commits_url": "https://api.github.com/repos/ksripathi/lab-data-service/git/commits{/sha}",
+		"comments_url": "https://api.github.com/repos/ksripathi/lab-data-service/comments{/number}",
+		"issue_comment_url": "https://api.github.com/repos/ksripathi/lab-data-service/issues/comments{/number}",
+		"contents_url": "https://api.github.com/repos/ksripathi/lab-data-service/contents/{+path}",
+		"compare_url": "https://api.github.com/repos/ksripathi/lab-data-service/compare/{base}...{head}",
+		"merges_url": "https://api.github.com/repos/ksripathi/lab-data-service/merges",
+        	"archive_url": "https://api.github.com/repos/ksripathi/lab-data-service/{archive_format}{/ref}",
+		"downloads_url": "https://api.github.com/repos/ksripathi/lab-data-service/downloads",
+		"issues_url": "https://api.github.com/repos/ksripathi/lab-data-service/issues{/number}",
+		"pulls_url": "https://api.github.com/repos/ksripathi/lab-data-service/pulls{/number}",
+		"milestones_url": "https://api.github.com/repos/ksripathi/lab-data-service/milestones{/number}",
+		"notifications_url": "https://api.github.com/repos/ksripathi/lab-data-service/notifications{?since,all,participating}",
+		"labels_url": "https://api.github.com/repos/ksripathi/lab-data-service/labels{/name}",
+		"releases_url": "https://api.github.com/repos/ksripathi/lab-data-service/releases{/id}",
+		"deployments_url": "https://api.github.com/repos/ksripathi/lab-data-service/deployments",
+		"created_at": "2017-06-07T04:04:59Z",
+		"updated_at": "2017-06-07T04:05:00Z",
+		"pushed_at": "2017-06-08T11:11:07Z",
+		"git_url": "git://github.com/ksripathi/lab-data-service.git",
+		"ssh_url": "git@github.com:ksripathi/lab-data-service.git",
+		"clone_url": "https://github.com/ksripathi/lab-data-service.git",
+		"svn_url": "https://github.com/ksripathi/lab-data-service",
+		"homepage": "null",
+		"size": 8979,
+		"stargazers_count": 0,
+		"watchers_count": 0,
+		"language": "Shell",
+		"has_issues": "false",
+		"has_projects": "true",
+		"has_downloads": "true",
+		"has_wiki": "true",
+		"has_pages": "false",
+		"forks_count": 0,
+		"mirror_url": "null",
+		"open_issues_count": 0,
+		"forks": 0,
+		"open_issues": 0,
+		"watchers": 0,
+		"default_branch": "master"
+	    },
+	    "sender": {
+		"login": "ksripathi",
+		"id": 8774380,
+		"avatar_url": "https://avatars3.githubusercontent.com/u/8774380?v=3",
+		"gravatar_id": "",
+		"url": "https://api.github.com/users/ksripathi",
+		"html_url": "https://github.com/ksripathi",
+		"followers_url": "https://api.github.com/users/ksripathi/followers",
+		"following_url": "https://api.github.com/users/ksripathi/following{/other_user}",
+		"gists_url": "https://api.github.com/users/ksripathi/gists{/gist_id}",
+		"starred_url": "https://api.github.com/users/ksripathi/starred{/owner}{/repo}",
+		"subscriptions_url": "https://api.github.com/users/ksripathi/subscriptions",
+		"organizations_url": "https://api.github.com/users/ksripathi/orgs",
+		"repos_url": "https://api.github.com/users/ksripathi/repos",
+		"events_url": "https://api.github.com/users/ksripathi/events{/privacy}",
+		"received_events_url": "https://api.github.com/users/ksripathi/received_events",
+		"type": "User",
+		"site_admin": "false"
+	    }
+	}
+
+
+	response = self.client.post("/build_sources", data=json.dumps(payload),
+				 headers=headers)
+	self.assertEqual(response.status_code, 200)
+
+#+END_SRC
+
 * Infra                                                         :boilerplate:
   
 ** sources
@@ -711,5 +1096,6 @@ if __name__ == '__main__':
 #+BEGIN_SRC python :tangle test_api.py :eval no :noweb yes
 <<imports_for_tests>>
 <<test_ci_hook>>
+<<test_build_sources>>
 <<run_test_cases>>
 #+end_src
