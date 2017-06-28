@@ -92,18 +92,16 @@
         },
         "installer": [
           "apt-get update",
-          "apt-get install openjdk-7-jdk -y",
-          "wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -",
-          "sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'",
-          "apt-get update -y",
-          "apt-get install jenkins -y",
-	  "service jenkins start",
-	  "apt-get install ufw -y",
-	  "ufw allow 8080",
-	  "ufw status",
-	  "apt-get install libapache2-mod-proxy-uwsgi -y",
-	  "a2enmod proxy_http",
-          "service apache2 restart"
+          "apt-get install python-pip python-dev nginx",
+          "pip install virtualenv",
+          "virtualenv myproject'",
+          "source myprojectenv/bin/activate",
+          "pip install gunicorn flask",
+	  "deactivate",
+	  "sudo vim /etc/init/myproject.conf",
+	  "sudo start myproject",
+	  "sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled",
+	  "sudo service nginx restart"
         ],
         "lab_actions": {
           "init"    : [],
