@@ -15,8 +15,13 @@
 * REST  
 
 ** Clone repository
-   This class contains a function to clone the github reposirtory if
-   repository already exists it pulls the code
+  :PROPERTIES:
+  :CUSTOM_ID: clone_repo
+  :END:    
+   
+   This class contains a function which does the cloning of the github
+   reposirtory, if repository already exists it pulls the latest
+   changes
    
 #+NAME: clone_repo
 #+BEGIN_SRC python
@@ -51,9 +56,18 @@ class RepoClone:
 
 
 ** Build the project
-   - This Class contains the function to build the repository and if
-     build is failed/success it creates the issue and assigns label to
-     it.
+  :PROPERTIES:
+  :CUSTOM_ID: build_repo
+  :END:    
+   
+   - This Class contains the function which does the building the
+     sources of github repository and if its is failed to generate
+     build it creates the issue on respective git repository and
+     assigns label called =build_failed=.
+
+   - If build is generated successfully it creates the issue on github
+     repository and assigns label called =build_passed= and closes the
+     issue.
 #+NAME: build_repo
 #+BEGIN_SRC python
 
@@ -93,8 +107,13 @@ class RepoBuild:
 
 
 ** Execute shell commands
-   This function executes the linux command and returns the output and
-   return code.
+  :PROPERTIES:
+  :CUSTOM_ID: execute_cmd
+  :END:    
+   
+   This function executes the linux command and returns the output
+   status code
+
 #+NAME: exec_commands
 #+BEGIN_SRC python
 
@@ -120,55 +139,51 @@ def linuxCommandExecuter(cmd):
 #+END_SRC
 
 
-** Extract git repository name 
-   This function takes github repository url as input argumentand
-   computes repository name and returns it
+** Extract git repository and organization names 
+  :PROPERTIES:
+  :CUSTOM_ID: get_repo_org
+  :END:    
+
+   This function extracts the repository name and its
+   associated organization name for a given github repository url.
+
 #+NAME: get_repo_name
 #+BEGIN_SRC python
 
-def repoNameExtacter(repo_url): #extract_repo_name before
+def repoNameExtacter(repo_url): 
+
     try:
-       repo_name = repo_url.split("/")[-1]
-       author_name = repo_url.split("/")[-2]
-       current_app.logger.debug("repo_name %s, author_name = %s" % (repo_name, author_name))
-       return (repo_name, author_name)
+       repo_data = repo_url.split("/")
+       repo_name = repo_data[-1]
+       org_name = repo_data[-2]
+       current_app.logger.debug("repo_name %s, author_name = %s" % (repo_name, org_name))
+       return (repo_name, org_name)
+
     except Exception as e:
        current_app.logger.error("Exception %s" % (str(e)))
        raise str(e)
 
 #+END_SRC
 
+** Create an issue on github repository
+  :PROPERTIES:
+  :CUSTOM_ID: git_issue
+  :END:    
 
-** Extract git author name
-   This function takes github repository url as input argument and
-   computes the author (organization) name and returns it.
+   This function creates the github issue & assigns the label to it
+   for a given repository. This function is useful to notify the
+   project's collabarators in terms of what are commits to a
+   repository causes test suit failed/success.
 
-#+NAME: get_repo_author
-#+BEGIN_SRC python
-
-def repoAuthorNameExtacter(url):
-    try:
-       author_name = repo_url.split("/")[-2]
-       current_app.logger.debug("author_name %s" % (author_name))
-       return author_name
-    except Exception as e:
-       current_app.logger.error("Exception %s" % (str(e)))
-       raise str(e)
-
-#+END_SRC
-
-
-** Create issue on github repository
-   - It extracts the data from the JSON recieved from the respective
-     webhook.
 #+NAME: create_issue
 #+BEGIN_SRC python
 
-REPO_OWNER = None
-def makeGithubIssue(repo_author, repo_name, title, body=None, assignee=None, milestone=None, labels=None):
-    url = 'https://api.github.com/repos/%s/%s/issues' % (repo_author, repo_name)
-    if (repo_author != "vlead") or (repo_author != "virtual-labs"):
-        abort(401, "Unauthorized repository")
+def makeGithubIssue(repo_org, repo_name, title, body=None, assignee=None, milestone=None, labels=None):
+    git_api_url = '%s/%s/%s/issues' % (GIT_API, repo_org, repo_name)
+    current_app.logger.debug("Git REST API URL : %s" % (git_api_url))
+    if (repo_org != "vlead") or (repo_org != "virtual-labs"):
+        current_app.logger.error("Git repo = %s, organization = %s are not authorized to invoke web hook" % (repo_name, repo_org))
+        abort(401, "Unauthorized repository/organization")
 
     try:
 	session = requests.Session()
@@ -180,13 +195,13 @@ def makeGithubIssue(repo_author, repo_name, title, body=None, assignee=None, mil
 		 'labels': labels
 	     }
 
-	current_app.logger.debug("Creating github issue")
-	r = session.post(url, json.dumps(issue))
+	current_app.logger.debug("Creating issue on git repository = %s under organization = %s" % (repo_name, repo_org))
+	r = session.post(git_api_url, json.dumps(issue))
 	if r.status_code == 201:
-	    current_app.logger.debug("Successfully created Issue : %s" % title)
+	    current_app.logger.debug("Successfully created Issue : %s on repository = %s" % (title, repo_name))
 	    return True
 	else:
-	    current_app.logger.error("Could not creat Issue : %s" % title)
+	    current_app.logger.error("Could not creat Issue : %s on repository = %s" % (title, repo_name))
 	    current_app.logger.error("Response : %s" % r.content)
 	    return False
     except Exception as e:
@@ -197,8 +212,13 @@ def makeGithubIssue(repo_author, repo_name, title, body=None, assignee=None, mil
 
 
 ** Push docs to doc server 
-   - This utility function is used to push the docs created after
-     running the make file onto the docs folder.
+  :PROPERTIES:
+  :CUSTOM_ID: doc_push
+  :END:    
+
+   This utility function does the pushing the literate documentation
+   of a lab/service to a document server (Hosted on stagin
+   environment)
 
 #+NAME: push_docs
 #+BEGIN_SRC python
@@ -210,10 +230,11 @@ def docsPusher(repo_name):
         current_app.logger.debug("copy command = %s" % copy_command)
         (ret_code, output) = linuxCommandExecuter(copy_command)
         if ret_code == 0:
-	    current_app.logger.debug("Copy successful")
+	    current_app.logger.debug("Copied SRC_DIR = %s to DEST_DIR = %s/%s/%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
 	    return True
         else:
-	    current_app.logger.debug("Copy Unsuccessful, return code is %s" % str(ret_code))
+            current_app.logger.debug("Copy Unsuccessful from SRC_DIR = %s to DEST_DIR = %s/%s/%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
+	    current_app.logger.debug("Command = %s , return code = %s" % (copy_command, str(ret_code)))
 	    return False
     except Exception, e:
         current_app.logger.error("ERROR = %s" % str(e))
@@ -223,6 +244,12 @@ def docsPusher(repo_name):
 
 
 ** Repo_exist
+  :PROPERTIES:
+  :CUSTOM_ID: exist_repo
+  :END:    
+
+   This function checks for repository exist or not
+
 #+NAME: repo_exist
 #+BEGIN_SRC python
 
@@ -230,7 +257,12 @@ def isRepoExist(repo_name):
     current_app.logger.debug("Checking repo %s existance" % (repo_name))
     try:
        ret_val = os.path.exists(repo_name)
-       return ret_val
+       if ret_val:
+           current_app.logger.debug("Repository = %s arleady exists" % (repo_name))
+           return ret_val
+       else:
+           current_app.logger.debug("Repository = %s not exists" % (repo_name))
+           return ret_val           
 
     except subprocess.CalledProcessError as cpe:
         current_app.logger.error("Called Process Error Message: %s" % cpe.output)
@@ -244,7 +276,7 @@ def isRepoExist(repo_name):
 
 
 ** API accepts the JSON sent by the git hub webhook via a POST request 
-
+   
 *** API Design
   :PROPERTIES:
   :CUSTOM_ID: ci_hook_api
@@ -413,6 +445,10 @@ def isRepoExist(repo_name):
  http://localhost:5000/ci_hook
 #+END_EXAMPLE
 *** Implementation   
+  :PROPERTIES:
+  :CUSTOM_ID: ci_hook
+  :END:    
+
 #+NAME: ci_hook
 #+BEGIN_SRC python
 @api.route("/ci_hook", methods = ['POST', 'GET'])
@@ -816,7 +852,7 @@ class TestWebHook(TestCase):
 #+NAME: ci_hook
 #+BEGIN_SRC python
 @api.route("/build_sources", methods = ['POST', 'GET'])
-def ci_hook():
+def build_repo():
 
     if request.method == "GET":
 	return "Method not allowed"
@@ -1095,6 +1131,8 @@ class TestBuild(TestCase):
          unittest.main()
    
    #+END_SRC
+
+
 * Infra                                                         :boilerplate:
   
 ** sources
