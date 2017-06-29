@@ -59,20 +59,27 @@ class RepoClone:
 *** Tests
 #+NAME: test_clone_repo
 #+BEGIN_SRC python
-class TestClone(TestCase):
+
+class TestClone(unittest.TestCase):
+    TESTING = True
+    def create_app(self):
+        app = create_app(config)
+        return app
 
     def setUp(self):
-	pass
+        pass
 
     def tearDown(self):
-	pass
+        pass
 
     def test_CiClone(self):
-        print "test_ci_clone"
-        url = "https://github.com/vlead/continuous-integration.git"
-	rc = repoClone(url)
-	self.assertEqual(rc.repoCloner(), True)
-
+        app = self.create_app()
+        with app.app_context():
+            print "test_ci_clone"
+            url = "https://github.com/vlead/lab-data-service"
+            rc = RepoClone(url)
+            print rc.repoCloner()
+            self.assertEqual(rc.repoCloner(), True)
 
 #+END_SRC
 
@@ -132,7 +139,10 @@ class RepoBuild:
 #+NAME: test_build_repo
 #+BEGIN_SRC python
 
-class TestBuild(TestCase):
+class TestBuild(unittest.TestCase):
+    def create_app(self):
+        app = create_app(config)
+        return app
 
     def setUp(self):
 	pass
@@ -141,10 +151,13 @@ class TestBuild(TestCase):
 	pass
 
     def testCiBuild(self):
-	print "test_ci_build"
-	url = "https://github.com/vlead/continuous-integration.git"        
-	rb = repoBuild(url)
-	self.asserEqual(rb.repoBuilder(), True)
+        app = self.create_app()
+        with app.app_context():
+            print "test_ci_build"
+            url = "https://github.com/vlead/lab-data-service"
+            rc = RepoClone(url)
+            rb = RepoBuild(url)
+            self.assertEqual(rb.repoBuilder(url), True)
 
 #+END_SRC
 ** Execute shell commands
@@ -184,7 +197,11 @@ def linuxCommandExecuter(cmd):
 #+NAME: test_exec_cmd
 #+BEGIN_SRC python
 
-class TesteExecuteCommand(TestCase):
+class TesteExecuteCommand(unittest.TestCase):
+    
+    def create_app(self):
+        app = create_app(config)
+        return app
 
     def setUp(self):
 	pass
@@ -194,9 +211,11 @@ class TesteExecuteCommand(TestCase):
 
     def test_linuxCommandExecuter(self):
 	print "test_ci_build"
-	url = "https://github.com/vlead/continuous-integration.git"        
-	(ret_code, output) = linuxCommandExecuter("ls")
-	self.asserEqual(ret_code, 0)
+        app = self.create_app()
+        with app.app_context():
+            url = "https://github.com/vlead/lab-data-service.git"        
+            (ret_code, output) = linuxCommandExecuter("ls")
+            self.assertEqual(ret_code, 0)
 
 #+END_SRC
 
@@ -232,7 +251,10 @@ def repoNameExtacter(repo_url):
 #+NAME: test_extract_repo
 #+BEGIN_SRC python
 
-class TesteExtractRepo(TestCase):
+class TesteExtractRepo(unittest.TestCase):
+    def create_app(self):
+        app = create_app(config)
+        return app
 
     def setUp(self):
 	pass
@@ -242,10 +264,13 @@ class TesteExtractRepo(TestCase):
 
     def test_extract_repo(self):
 	print "test_ci_build"
-	url = "https://github.com/vlead/continuous-integration.git"        
-	(repo_name, repo_org) = repoNameExtacter(url)
-	self.asserEqual(repo_name, "continuous-integration")
-        self.asserEqual(repo_org, "vlead")
+        print "test_ci_build"
+        app = self.create_app()
+        with app.app_context():
+            url = "https://github.com/vlead/lab-data-service"        
+            (repo_name, repo_org) = repoNameExtacter(url)
+            self.assertEqual(repo_name, "lab-data-service")
+            self.assertEqual(repo_org, "vlead")
 
 #+END_SRC
 
@@ -296,6 +321,35 @@ def makeGithubIssue(repo_org, repo_name, title, body=None, assignee=None, milest
 #+END_SRC
 
 *** Tests
+#+NAME: test_create_issue
+#+BEGIN_SRC python
+
+class TesteCreateIssue(unittest.TestCase):
+    def create_app(self):
+        app = create_app(config)
+        return app
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def test_create_issue(self):
+        print "test_create_issue"
+        app = self.create_app()
+        with app.app_context():
+	    ret_status = makeGithubIssue(repo_author, repo_name, 'Build ran successfully', \
+	                                   'Build ran successfully and docs are moved to doc server', \
+                                           'assigned_user', 3, ['build_passed'])
+            url = "https://github.com/vlead/lab-data-service"        
+            (repo_name, repo_org) = repoNameExtacter(url)
+            self.assertEqual(repo_name, "lab-data-service")
+            self.assertEqual(repo_org, "vlead")
+
+#+END_SRC
+
+
 ** Push docs to doc server 
   :PROPERTIES:
   :CUSTOM_ID: doc_push
@@ -329,6 +383,33 @@ def docsPusher(repo_name):
 #+END_SRC
 
 *** Tests
+#+NAME: test_extract_repo
+#+BEGIN_SRC python
+
+class TesteExtractRepo(unittest.TestCase):
+    def create_app(self):
+        app = create_app(config)
+        return app
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def test_extract_repo(self):
+	print "test_ci_build"
+        print "test_ci_build"
+        app = self.create_app()
+        with app.app_context():
+            url = "https://github.com/vlead/lab-data-service"        
+            (repo_name, repo_org) = repoNameExtacter(url)
+            self.assertEqual(repo_name, "lab-data-service")
+            self.assertEqual(repo_org, "vlead")
+
+#+END_SRC
+
+
 ** Repo_exist
   :PROPERTIES:
   :CUSTOM_ID: exist_repository
@@ -366,7 +447,10 @@ def isRepoExist(repo_name):
 #+NAME: test_repo_exist
 #+BEGIN_SRC python
 
-class TesteRepoExist(TestCase):
+class TesteRepoExist(unittest.TestCase):
+    def create_app(self):
+        app = create_app(config)
+        return app
 
     def setUp(self):
 	pass
@@ -376,10 +460,13 @@ class TesteRepoExist(TestCase):
 
     def test_repo_exist(self):
 	print "test_ci_build"
-	url = "https://github.com/vlead/continuous-integration.git"
-        rc = repoClone(url)
-        (repo_name, repo_org) = repoNameExtacter(url)
-	self.asserEqual(isRepoExist(repo_name), True)
+        app = self.create_app()
+        with app.app_context():
+            url = "https://github.com/vlead/lab-data-service"
+            rc = RepoClone(url)
+            rc.repoCloner()
+            (repo_name, repo_org) = repoNameExtacter(url)
+            self.assertEqual(isRepoExist(repo_name), True)
 
 #+END_SRC
 
@@ -623,7 +710,6 @@ def ci_push_docs():
 #+END_SRC
 
 *** Test Cases
-**** Test webhook REST API
 #+NAME: test_ci_push_docs
 #+BEGIN_SRC python
 class TestWebHook(TestCase):
@@ -1244,8 +1330,10 @@ if __name__ == '__main__':
 <<test_exec_cmd>>
 <<test_extract_repo>>
 <<test_repo_exist>>
-<<testCiBuild>>
-<<testCiClone>>
-<<test_build_sources>>
+<<test_ci_push_docs>>
+#<<testCiBuild>>
+
+#<<testCiClone>>
+#<<test_build_sources>>
 <<run_test_cases>>
 #+end_src
