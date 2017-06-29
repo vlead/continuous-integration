@@ -16,8 +16,10 @@
 
 ** Clone repository
   :PROPERTIES:
-  :CUSTOM_ID: clone_repo
+  :CUSTOM_ID: clone_repository
   :END:    
+  
+*** Implementation
    
    This class contains a function which does the cloning of the github
    reposirtory, if repository already exists it pulls the latest
@@ -54,11 +56,31 @@ class RepoClone:
 
 #+END_SRC
 
+*** Tests
+#+NAME: test_clone_repo
+#+BEGIN_SRC python
+class TestClone(TestCase):
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def test_CiClone(self):
+        print "test_ci_clone"
+        url = "https://github.com/vlead/continuous-integration.git"
+	rc = repoClone(url)
+	self.assertEqual(rc.repoCloner(), True)
+
+
+#+END_SRC
 
 ** Build the project
   :PROPERTIES:
-  :CUSTOM_ID: build_repo
+  :CUSTOM_ID: build_repository
   :END:    
+*** Implementation
    
    - This Class contains the function which does the building the
      sources of github repository and if its is failed to generate
@@ -68,6 +90,7 @@ class RepoClone:
    - If build is generated successfully it creates the issue on github
      repository and assigns label called =build_passed= and closes the
      issue.
+
 #+NAME: build_repo
 #+BEGIN_SRC python
 
@@ -105,11 +128,30 @@ class RepoBuild:
 		
 #+END_SRC
 
+*** Tests
+#+NAME: test_build_repo
+#+BEGIN_SRC python
 
+class TestBuild(TestCase):
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def testCiBuild(self):
+	print "test_ci_build"
+	url = "https://github.com/vlead/continuous-integration.git"        
+	rb = repoBuild(url)
+	self.asserEqual(rb.repoBuilder(), True)
+
+#+END_SRC
 ** Execute shell commands
   :PROPERTIES:
   :CUSTOM_ID: execute_cmd
   :END:    
+*** Implementation
    
    This function executes the linux command and returns the output
    status code
@@ -138,11 +180,32 @@ def linuxCommandExecuter(cmd):
     return (return_code, output)
 #+END_SRC
 
+*** Tests
+#+NAME: test_exec_cmd
+#+BEGIN_SRC python
+
+class TesteExecuteCommand(TestCase):
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def test_linuxCommandExecuter(self):
+	print "test_ci_build"
+	url = "https://github.com/vlead/continuous-integration.git"        
+	(ret_code, output) = linuxCommandExecuter("ls")
+	self.asserEqual(ret_code, 0)
+
+#+END_SRC
 
 ** Extract git repository and organization names 
   :PROPERTIES:
   :CUSTOM_ID: get_repo_org
   :END:    
+*** Implementation
+
 
    This function extracts the repository name and its
    associated organization name for a given github repository url.
@@ -165,10 +228,32 @@ def repoNameExtacter(repo_url):
 
 #+END_SRC
 
+*** Tests
+#+NAME: test_extract_repo
+#+BEGIN_SRC python
+
+class TesteExtractRepo(TestCase):
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def test_extract_repo(self):
+	print "test_ci_build"
+	url = "https://github.com/vlead/continuous-integration.git"        
+	(repo_name, repo_org) = repoNameExtacter(url)
+	self.asserEqual(repo_name, "continuous-integration")
+        self.asserEqual(repo_org, "vlead")
+
+#+END_SRC
+
 ** Create an issue on github repository
   :PROPERTIES:
   :CUSTOM_ID: git_issue
   :END:    
+*** Implementation
 
    This function creates the github issue & assigns the label to it
    for a given repository. This function is useful to notify the
@@ -210,11 +295,12 @@ def makeGithubIssue(repo_org, repo_name, title, body=None, assignee=None, milest
 
 #+END_SRC
 
-
+*** Tests
 ** Push docs to doc server 
   :PROPERTIES:
   :CUSTOM_ID: doc_push
   :END:    
+*** Implementation
 
    This utility function does the pushing the literate documentation
    of a lab/service to a document server (Hosted on stagin
@@ -242,11 +328,13 @@ def docsPusher(repo_name):
 
 #+END_SRC
 
-
+*** Tests
 ** Repo_exist
   :PROPERTIES:
-  :CUSTOM_ID: exist_repo
+  :CUSTOM_ID: exist_repository
   :END:    
+
+*** Implementation
 
    This function checks for repository exist or not
 
@@ -274,14 +362,34 @@ def isRepoExist(repo_name):
 
 #+END_SRC
 
+*** Tests
+#+NAME: test_repo_exist
+#+BEGIN_SRC python
 
-** API accepts the JSON sent by the git hub webhook via a POST request 
+class TesteRepoExist(TestCase):
+
+    def setUp(self):
+	pass
+
+    def tearDown(self):
+	pass
+
+    def test_repo_exist(self):
+	print "test_ci_build"
+	url = "https://github.com/vlead/continuous-integration.git"
+        rc = repoClone(url)
+        (repo_name, repo_org) = repoNameExtacter(url)
+	self.asserEqual(isRepoExist(repo_name), True)
+
+#+END_SRC
+
+** API accepts the JSON sent by the git hub webhook via a POST request
    
 *** API Design
   :PROPERTIES:
   :CUSTOM_ID: ci_hook_api
   :END:    
-  - URL :: /ci_hook
+  - URL :: /ci_push_docs
 
   - Method :: POST
 
@@ -451,8 +559,8 @@ def isRepoExist(repo_name):
 
 #+NAME: ci_hook
 #+BEGIN_SRC python
-@api.route("/ci_hook", methods = ['POST', 'GET'])
-def ci_hook():
+@api.route("/ci_push_docs", methods = ['POST', 'GET'])
+def ci_push_docs():
 
     if request.method == "GET":
 	return "Method not allowed"
@@ -516,7 +624,7 @@ def ci_hook():
 
 *** Test Cases
 **** Test webhook REST API
-#+NAME: test_ci_hook
+#+NAME: test_ci_push_docs
 #+BEGIN_SRC python
 class TestWebHook(TestCase):
     TESTING = True
@@ -672,12 +780,11 @@ class TestWebHook(TestCase):
 	}
 
 
-	response = self.client.post("/ci_hook", data=json.dumps(payload),
+	response = self.client.post("/ci_push_docs", data=json.dumps(payload),
 				 headers=headers)
 	self.assertEqual(response.status_code, 200)
 
 #+END_SRC
-
 
 ** API to build the souces of github repository
 
@@ -685,7 +792,7 @@ class TestWebHook(TestCase):
   :PROPERTIES:
   :CUSTOM_ID: ci_hook_api
   :END:    
-  - URL :: /build_sources
+  - URL :: /ci_build_sources
 
   - Method :: POST
 
@@ -846,12 +953,12 @@ class TestWebHook(TestCase):
     
   - Example:
 #+BEGIN_EXAMPLE
- http://localhost:5000/build_sources
+ http://localhost:5000/ci_build_sources
 #+END_EXAMPLE
 *** Implementation   
 #+NAME: ci_hook
 #+BEGIN_SRC python
-@api.route("/build_sources", methods = ['POST', 'GET'])
+@api.route("/ci_build_sources", methods = ['POST', 'GET'])
 def build_repo():
 
     if request.method == "GET":
@@ -906,7 +1013,7 @@ def build_repo():
 **** Test webhook REST API
 #+NAME: test_build_sources
 #+BEGIN_SRC python
-class TestBuildWebHook(TestCase):
+class TestBuilSources(TestCase):
     TESTING = True
     def create_app(self):
 	app = create_app(config)
@@ -918,8 +1025,8 @@ class TestBuildWebHook(TestCase):
     def tearDown(self):
 	pass
 
-    def test_ci_web_hook(self):
-	print "test_ci_web_hook"
+    def test_ci_build_sources(self):
+	print "test_ci_build_sources"
 
 	headers = {'Content-Type': 'application/json'}
 	payload = {
@@ -1067,72 +1174,6 @@ class TestBuildWebHook(TestCase):
 #+END_SRC
 
 
-** Unit test for clone feature
-   #+BEGIN_SRC python
-import unittest
-from flask_testing import TestCase
-from runtime.rest.app import create_app
-from runtime.rest.api import *
-
-class TestClone(TestCase):
-	TESTING = True
-
-	def create_app(self):
-	app = create_app(config)
-	return app
-
-    def setUp(self):
-	pass
-
-    def tearDown(self):
-	pass
-
-	def testCiClone(self):
-		print "Unit testing the cloning feature"
-
-	        url = "https://github.com/vlead/continuous-integration.git"
-	        rc = repoClone(url)
-	        self.assertEqual(rc.repoCloner(), True)
-
-	if __name__ == '__main__':
-         unittest.main()
-   
-   #+END_SRC
-
-** Unit test for build feature
-   #+BEGIN_SRC python
-   import unittest
-from flask_testing import TestCase
-from runtime.rest.app import create_app
-from runtime.rest.api import *
-
-class TestBuild(TestCase):
-	
-	TESTING = True
-
-	def create_app(self):
-	app = create_app(config)
-	return app
-
-    def setUp(self):
-	pass
-
-    def tearDown(self):
-	pass
-
-	def testCiBuild(self):
-		print "Unit testing the build feature"
-	        url = "https://github.com/vlead/continuous-integration.git"
-	
-	        rb = repoBuild(url)
-	        self.asserEqual(rb.repoBuilder(), True)
-
-	if __name__ == '__main__':
-         unittest.main()
-   
-   #+END_SRC
-
-
 * Infra                                                         :boilerplate:
   
 ** sources
@@ -1198,7 +1239,11 @@ if __name__ == '__main__':
 ** tests
 #+BEGIN_SRC python :tangle test_api.py :eval no :noweb yes
 <<imports_for_tests>>
-<<test_ci_hook>>
+<<test_clone_repo>>
+<<test_build_repo>>
+<<test_exec_cmd>>
+<<test_extract_repo>>
+<<test_repo_exist>>
 <<testCiBuild>>
 <<testCiClone>>
 <<test_build_sources>>

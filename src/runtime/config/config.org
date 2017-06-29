@@ -39,7 +39,7 @@ LOG_LEVEL = 10
 
 * Git repository configuration
   :PROPERTIES:
-  :CUSTOM_ID: git_config
+  :CUSTOM_ID: git_configuration
   :END:    
 
   Configuration for the github credentials
