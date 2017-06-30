@@ -67,6 +67,23 @@ GIT_BRANCH = "develop"
 #+END_SRC
   
 
+* ADS Configuration
+  :PROPERTIES:
+  :CUSTOM_ID: ads_configuration
+  :END:    
+
+  Configuration for the =ADS= service
+#+NAME: ads_config
+#+BEGIN_SRC python
+
+# Authentication for ADS service
+
+ADS_URL = 'http://localhost:5000'
+ADS_SECRET_KEY = "defaultkey"
+
+#+END_SRC
+  
+
 * Tangling                                                      :boilerplate:
   
 ** flask_app_config
@@ -79,3 +96,7 @@ GIT_BRANCH = "develop"
 <<git_config>>
 #+end_src
 
+** ads_config
+#+BEGIN_SRC python :tangle ads_config.py :eval no :noweb yes
+<<ads_config>>
+#+end_src

@@ -14,6 +14,7 @@
 
   This document briefly explains the requirements of Contineous
   Integration Service project
+
 * Functional Requirements
    :PROPERTIES:
    :CUSTOM_ID: requirements
@@ -25,6 +26,7 @@
 
    - Build the sources of github repository for every new release/tag
      made
+   -  [[../runtime/rest/api.org::#build_repository][Implementation]]
 ** Req2
    :PROPERTIES:
    :CUSTOM_ID: req2
@@ -32,14 +34,15 @@
 
    - Run the unit test cases for every a new release/tag made on github
      reposiotry.
+   - [[../runtime/rest/api.org::#build_repository][Implementation]]
 ** Req3
    :PROPERTIES:
    :CUSTOM_ID: req3
    :END: 
-
    - Report the errors generated incase certain test cases failed to
      run by means of creating issues and assigning labels to it on
      respective github repository
+   - [[../runtime/rest/api.org::#git_issue][Implementation]]
 ** Req4
    :PROPERTIES:
    :CUSTOM_ID: req4
@@ -47,6 +50,7 @@
 
    - Host the literate version documentation of a lab/service into document
      server (on staging environment)
+   - [[../runtime/rest/api.org::#ci_hook][Implementation]]
 ** Req5
    :PROPERTIES:
    :CUSTOM_ID: req5
@@ -54,4 +58,4 @@
 
    - Deploy the lab/service on staging environment for every github
      release/tag made.
-
+   - [[../runtime/rest/api.org::#ci_hook_api][Implementation]]

@@ -1410,7 +1410,11 @@ class TestBuilSources(TestCase):
 {
 "status_code" : 200,
 "message" : "Successfully deployed repository",
-"ip"      : "127.0.0.1"
+"deploy_details"  : { "lab_id" : "cse01",
+                      "lab_src_url" : "http://github.com/vlead/ovpl.git",
+                      "version" : "v1.2",
+                      "url" : "http://127.0.0.1"
+		     }
 }
 #+END_EXAMPLE    
   - Error Response:
@@ -1419,7 +1423,7 @@ class TestBuilSources(TestCase):
     
   - Example:
 #+BEGIN_EXAMPLE
- http://localhost:5000/ci_deploy_lab
+ http://localhost:5000/ci_deploy_repo
 #+END_EXAMPLE
 *** Implementation   
 #+NAME: ci_deploy_repo
@@ -1674,6 +1678,7 @@ class TestDeployRepo(TestCase):
 import requests
 import json
 import subprocess
+from runtime.config.ads_config import *
 from runtime.config.git_config import USERNAME, PASSWORD, IP_ADDRESS, DEST_DIR, GIT_API, GIT_BRANCH
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
