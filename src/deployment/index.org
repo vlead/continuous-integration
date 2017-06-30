@@ -6,14 +6,18 @@
 #+EXCLUDE_TAGS: boilerplate
 #+OPTIONS: ^:nil
 
-* Documentation for deployment of the CI microservice
+
+* Introduction
+  This document will illustrate installation of all the dependencies required
+  for setting up the application.
 
 
-https://github.com/vlead/continuous-integration/blob/develop/src/deployment/ci_microservice/index.org
+* Deploy vlead ci micro service
+
+  https://github.com/vlead/continuous-integration/blob/develop/src/deployment/ci_microservice/index.org
 
 
 
-* Documentation for deployment of Jenkins
-
-
-https://github.com/vlead/continuous-integration/tree/develop/src/deployment/jenkins
+* Deploy Jenkins CI server
+  
+  https://github.com/vlead/continuous-integration/tree/develop/src/deployment/jenkins
