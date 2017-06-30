@@ -1,60 +1,60 @@
 
-1. Install pip and nginx
+ Install pip and nginx
 
 #+BEGIN_EXAMPLE
 sudo apt-get update
 sudo apt-get install python-pip python-dev nginx
 #+END_EXAMPLE
 
-2. Create a Python Virtual Environment
+ Create a Python Virtual Environment
 
 #+BEGIN_EXAMPLE
 sudo pip instal virtualenv
 #+END_EXAMPLE
 
-3. Create a virtual environment to store
+ Create a virtual environment to store
 
 #+BEGIN_EXAMPLE
 virtualenv myprojectenv
 #+END_EXAMPLE
 
-4. Activate the virtual environment
+ Activate the virtual environment
 #+BEGIN_EXAMPLE
 source myprojectenv/bin/activate
 #+END_EXAMPLE
 
-5. Install flask and gunicorn in the virtual environment
+ Install flask and gunicorn in the virtual environment
 #+BEGIN_EXAMPLE
 pip install gunicorn flask
 #+END_EXAMPLE
 
-6. Run and test the flask file
+ Run and test the flask file
 #+BEGIN_EXAMPLE
 python myproject.py
 #+END_EXAMPLE
 
-7. Test Gunicorn
+ Test Gunicorn
 #+BEGIN_EXAMPLE
 cd home/user/myproject
 gunicorn --bind 0.0.0.0:8000 wsgi
 #+END_EXAMPLE 
 
-8. Open your browser and type in your ip address with the port 
+ Open your browser and type in your ip address with the port 
 #+BEGIN_EXAMPLE
 127.0.0.1:8000
 #+END_EXAMPLE
 
-9. Deactivate the virtual environment
+ Deactivate the virtual environment
 #+BEGIN_EXAMPLE
 deactivate
 #+END_EXAMPLE
 
-10.Create an upstart script
+ Create an upstart script
 #+BEGIN_EXAMPLE
 sudo vim /etc/init/myproject.conf
 #+END_EXAMPLE
 
-11. Define the conditions where the script should start and end
+ Define the conditions where the script should start and end
 #+BEGIN_EXAMPLE
 description "Gunicorn application server running myproject"
 
@@ -62,31 +62,31 @@ start on runlevel [2345]
 stop on runlevel [!2345]
 #+END_EXAMPLE
 
-12. Define the user and group that Gunicorn should be run as(add this to myproject.conf)
+ Define the user and group that Gunicorn should be run as(add this to myproject.conf)
 #+BEGIN_EXAMPLE
 respawn
 setuid user
 setgid www-data
 #+END_EXAMPLE
 
-13. Create a socket file within our project directory, set umask value so that the socket file is created giving access to the owner and group, while restricting other access, then pass in the WSGI entry point file name
+ Create a socket file within our project directory, set umask value so that the socket file is created giving access to the owner and group, while restricting other access, then pass in the WSGI entry point file name
 #+BEGIN_EXAMPLE
 envPATH=/home/srikar/myproject/myprojectenv/bin
 chdir /home/user/myproject
 exec gunicorn --workers 3 --bind unix:myproject.sock -m 007 wsgi
 #+End_EXAMPLE
 
-14. Start the project
+ Start the project
 #+BEGIN_EXAMPLE
 sudo start myproject
 #+End_EXAMPLE
 
-15. Proxy requests, configuring nginx
+ Proxy requests, configuring nginx
 #+BEGIN_EXAMPLE
 sudo vim /etc/nginx/sites-available/myproject
 #+End_EXAMPLE
 
-16. Copy the code into the myproject file in the previous directory
+ Copy the code into the myproject file in the previous directory
 #+BEGIN_EXAMPLE
 server {
     listen 80;
@@ -99,12 +99,12 @@ server {
 }
 #+End_EXAMPLE
 
-17. To enable the Nginx server block configuration we've just created, link the file to the sites-enabled directory
+ To enable the Nginx server block configuration we've just created, link the file to the sites-enabled directory
 #+BEGIN_EXAMPLE
 sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled
 #+End_EXAMPLE
 
-18.
+ Restart Nginx
 #+BEGIN_EXAMPLE
 sudo service nginx restart
 #+End_EXAMPLE
