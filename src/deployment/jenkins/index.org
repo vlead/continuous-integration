@@ -1,0 +1,79 @@
+#+TITLE: Deploying the application on a server
+#+AUTHOR: VLEAD
+#+DATE: [2017-06-07 Tue]
+#+SETUPFILE: ../org-templates/level-1.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
+
+* Introduction: 
+  This document briefly describes the steps to be followed to setup
+  =jenkins= continuous integration tool on server.
+
+
+* Setting up jenkins server
+- Creating container on base4 server
+    
+#+BEGIN_SRC 
+vzctl create 301 --ostemplate ubuntu-16.04-x86_64 --ipadd 10.4.12.30 --namesever jenkins-ubuntu
+#+END_SRC
+
+- Start the container
+
+#+BEGIN_SRC 
+vzctl start 301
+#+END_SRC
+- Login to the container
+#+BEGIN_SRC
+vzctl enter 301
+#+END_SRC
+- Proxy setup
+
+#+BEGIN_SRC
+export http_proxy="http://proxy.iiit.ac.in:8080"
+export https_proxy="http://proxy.iiit.ac.in:8080"
+#+END_SRC
+
+- Update the OS
+
+#+BEGIN_SRC 
+apt-get update
+#+END_SRC
+
+- Install Java
+
+#+BEGIN_SRC 
+apt-get install openjdk-8-jdk
+#+END_SRC
+
+- Install Jenkis server application
+
+#+BEGIN_SRC 
+wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt-get update
+sudo apt-get install jenkins
+#+END_SRC
+
+- Starting and checking the status of Jenkins
+
+#+BEGIN_SRC 
+java sudo systemctl start jenkins
+sudo systemctl status jenkins
+#+END_SRC
+
+- Opening the firewall
+
+#+BEGIN_SRC 
+apt-get install ufw
+sudo ufw allow 8080
+sudo ufw status
+#+END_SRC
+
+- Access jenkis through browser
+#+BEGIN_SRC 
+http://10.4.12.30:8080/
+#+END_SRC
+
+
+* Configuration of jenkins server
