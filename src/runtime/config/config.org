@@ -52,7 +52,7 @@ USERNAME = 'uname'
 PASSWORD = 'pswd'
 
 #Git REST API to create issues
-GIT_API = "https://api.github.com/repos/"
+GIT_API = "https://api.github.com/repos"
 
 # Doc server location path
 DEST_DIR = '/var/www'

@@ -18,7 +18,6 @@
   :PROPERTIES:
   :CUSTOM_ID: clone_repository
   :END:    
-  
 *** Implementation
    
    This class contains a function which does the cloning of the github
@@ -67,23 +66,21 @@ class TestClone(unittest.TestCase):
         return app
 
     def setUp(self):
-        pass
+        self.git_url = "https://github.com/vlead/lab-data-service"
 
     def tearDown(self):
-        pass
+        shutil.rmtree("lab-data-service")
 
-    def test_CiClone(self):
+    def test_ci_clone(self):
         app = self.create_app()
         with app.app_context():
             print "test_ci_clone"
-            url = "https://github.com/vlead/lab-data-service"
-            rc = RepoClone(url)
-            print rc.repoCloner()
+            rc = RepoClone(self.git_url)
             self.assertEqual(rc.repoCloner(), True)
 
 #+END_SRC
 
-** Build the project
+** Build the repository
   :PROPERTIES:
   :CUSTOM_ID: build_repository
   :END:    
@@ -107,7 +104,7 @@ class RepoBuild:
 	self.git_url = git_url
 
     '''This function is used to run the make commmand'''
-    def repoBuilder(self, git_url):#build_repo before
+    def repoBuilder(self):#build_repo before
 	current_app.logger.debug("Running make command")
 	(repo_name, repo_author) = repoNameExtacter(self.git_url)
 	mk_cmd = 'cd %s;make' % (repo_name)
@@ -145,19 +142,20 @@ class TestBuild(unittest.TestCase):
         return app
 
     def setUp(self):
-	pass
+        self.git_url = "https://github.com/vlead/lab-data-service"
 
     def tearDown(self):
-	pass
+        shutil.rmtree("lab-data-service")
 
-    def testCiBuild(self):
+    def test_build_repo(self):
         app = self.create_app()
         with app.app_context():
-            print "test_ci_build"
+            print "test_build_repo"
             url = "https://github.com/vlead/lab-data-service"
             rc = RepoClone(url)
+	    rc.repoCloner()
             rb = RepoBuild(url)
-            self.assertEqual(rb.repoBuilder(url), True)
+            self.assertEqual(rb.repoBuilder(), True)
 
 #+END_SRC
 ** Execute shell commands
@@ -209,8 +207,8 @@ class TesteExecuteCommand(unittest.TestCase):
     def tearDown(self):
 	pass
 
-    def test_linuxCommandExecuter(self):
-	print "test_ci_build"
+    def test_command_executer(self):
+	print "test_command_executer"
         app = self.create_app()
         with app.app_context():
             url = "https://github.com/vlead/lab-data-service.git"        
@@ -257,18 +255,16 @@ class TesteExtractRepo(unittest.TestCase):
         return app
 
     def setUp(self):
-	pass
+        self.git_url = "https://github.com/vlead/lab-data-service"        
 
     def tearDown(self):
 	pass
 
     def test_extract_repo(self):
-	print "test_ci_build"
-        print "test_ci_build"
+        print "test_extract_repo"
         app = self.create_app()
-        with app.app_context():
-            url = "https://github.com/vlead/lab-data-service"        
-            (repo_name, repo_org) = repoNameExtacter(url)
+        with app.app_context():            
+            (repo_name, repo_org) = repoNameExtacter(self.url)
             self.assertEqual(repo_name, "lab-data-service")
             self.assertEqual(repo_org, "vlead")
 
@@ -330,23 +326,22 @@ class TesteCreateGitIssue(unittest.TestCase):
         return app
 
     def setUp(self):
-	pass
+	self.git_url = "https://github.com/ksripathi/Documents" 
 
     def tearDown(self):
 	pass
 
     def test_create_git_issue(self):
-        print "test_create_issue"
+        print "test_create_git_issue"
         app = self.create_app()
         with app.app_context():
-	    url = "https://github.com/ksripathi/Documents"        
-	    (repo_name, repo_org) = repoNameExtacter(url)
-            title = "test issue"	    
-	    ret_status = makeGithubIssue(repo_org, repo_name, title, body=None, assignee=None, milestone=None, labels=None)
+	    (repo_name, repo_org) = repoNameExtacter(self.git_url)
+            title = "test issue"
+ 	    labels = ["build_failed"]
+	    ret_status = makeGithubIssue(repo_org, repo_name, title, body=None, assignee=None, milestone=None, labels=labels)
             self.assertEqual(ret_status, True)
 
 #+END_SRC
-
 
 ** Push docs to doc server 
   :PROPERTIES:
@@ -390,23 +385,24 @@ class TestePushDocs(unittest.TestCase):
         return app
 
     def setUp(self):
-	pass
+	self.git_url = "https://github.com/vlead/lab-data-service"
 
     def tearDown(self):
-	pass
+	shutil.rmtree("lab-data-service")
 
-    def test_extract_repo(self):
-	print "test_ci_build"
-        print "test_ci_build"
+    def test_push_docs(self):
+	print "test_push_docs"
         app = self.create_app()
         with app.app_context():
-            url = "https://github.com/vlead/lab-data-service"        
-            (repo_name, repo_org) = repoNameExtacter(url)
-            self.assertEqual(repo_name, "lab-data-service")
-            self.assertEqual(repo_org, "vlead")
+	    rc = RepoClone(self.git_url)
+            rc.repoCloner()
+	    rb = RepoBuild(self.git_url)
+	    rb.repoBuilder()
+            (repo_name, repo_org) = repoNameExtacter(self.git_url)
+	    docsPusher(repo_name):
+	    self.assertEqual(docsPusher(repo_name), True)
 
 #+END_SRC
-
 
 ** Repo_exist
   :PROPERTIES:
@@ -451,24 +447,23 @@ class TesteRepoExist(unittest.TestCase):
         return app
 
     def setUp(self):
-	pass
+	self.git_url = "https://github.com/vlead/lab-data-service"
 
     def tearDown(self):
-	pass
+        shutil.rmtree("lab-data-service")
 
     def test_repo_exist(self):
-	print "test_ci_build"
+	print "test_repo_exist"
         app = self.create_app()
-        with app.app_context():
-            url = "https://github.com/vlead/lab-data-service"
-            rc = RepoClone(url)
+        with app.app_context():            
+            rc = RepoClone(self.git_url)
             rc.repoCloner()
-            (repo_name, repo_org) = repoNameExtacter(url)
+            (repo_name, repo_org) = repoNameExtacter(self.git_url)
             self.assertEqual(isRepoExist(repo_name), True)
 
 #+END_SRC
 
-** API accepts the JSON sent by the git hub webhook via a POST request
+** REST API to push the docs into doc server
    
 *** API Design
   :PROPERTIES:
@@ -664,7 +659,7 @@ def ci_push_docs():
     if cmd_status == True:
 	(repo_name, repo_author) = repoNameExtacter(git_url)  
 	rtb = RepoBuild(git_url)
-	status = rtb.repoBuilder(git_url)
+	status = rtb.repoBuilder()
 
 	if status == True:
 	    status = docsPusher(repo_name)  
@@ -870,7 +865,7 @@ class TestWebHook(TestCase):
 
 #+END_SRC
 
-** API to build the souces of github repository
+** REST API to build the souces of github repository
 
 *** API Design
   :PROPERTIES:
@@ -1040,7 +1035,7 @@ class TestWebHook(TestCase):
  http://localhost:5000/ci_build_sources
 #+END_EXAMPLE
 *** Implementation   
-#+NAME: ci_hook
+#+NAME: ci_build_sources
 #+BEGIN_SRC python
 @api.route("/ci_build_sources", methods = ['POST', 'GET'])
 def build_repo():
@@ -1062,7 +1057,7 @@ def build_repo():
     if cmd_status == True:
 	(repo_name, repo_author) = repoNameExtacter(git_url)  
 	rtb = RepoBuild(git_url)
-	status = rtb.repoBuilder(git_url)
+	status = rtb.repoBuilder()
 
 	if status == True:
 	    message = {
@@ -1256,7 +1251,7 @@ class TestBuilSources(TestCase):
 
 #+END_SRC
 
-** API to deploy the service/lab using ADS
+** REST API to deploy the service/lab using ADS
 
 *** API Design
   :PROPERTIES:
@@ -1449,7 +1444,7 @@ def deploy_repo():
     if cmd_status == True:
 	(repo_name, repo_author) = repoNameExtacter(git_url)  
 	rtb = RepoBuild(git_url)
-	status = rtb.repoBuilder(git_url)
+	status = rtb.repoBuilder()
 
 	if status == True:
 	    lab_id = repo_name
@@ -1668,6 +1663,7 @@ class TestDeployRepo(TestCase):
 
 #+END_SRC
 
+
 * Infra                                                         :boilerplate:
   
 ** sources
@@ -1695,6 +1691,7 @@ import os
 #+BEGIN_SRC python
 # -*- coding: utf-8 -*-
 import unittest
+import shutil
 from flask_testing import TestCase
 from runtime.rest.app import create_app
 from runtime.rest.api import *
@@ -1727,7 +1724,7 @@ if __name__ == '__main__':
 <<get_repo_name>>
 <<create_issue>>
 <<push_docs>>
-<<ci_hook>>
+<<ci_build_sources>>
 <<ci_deploy_repo>>
 <<ci_push_docs>>
 
@@ -1737,11 +1734,11 @@ if __name__ == '__main__':
 ** tests
 #+BEGIN_SRC python :tangle test_api.py :eval no :noweb yes
 <<imports_for_tests>>
-#<<test_clone_repo>>
+<<test_clone_repo>>
 #<<test_build_repo>>
 #<<test_exec_cmd>>
 #<<test_push_docs>>
-<<test_create_issue>>
+#<<test_create_issue>>
 #<<test_extract_repo>>
 #<<test_repo_exist>>
 #<<test_ci_push_docs>>
