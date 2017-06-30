@@ -10,6 +10,7 @@
   This document illustrates building of the REST APIs which provide various functionality provided by a Continuous
   Integration Microservice.
 
+
 * REST  
 
 ** Clone repository
@@ -476,10 +477,10 @@ class TesteRepoExist(unittest.TestCase):
 
 
 ** REST API to build the souces of github repository
-   This API if registered with in a respective webhook will be invoked 
-   whenever a somwthing new is pushed onto the repository.It clones the repository
-   if not present and then builds it.If already present it pulls the changes and then
-   builds it.
+   This API if registered with in a respective webhook will be invoked
+   whenever a new commit is pushed onto the repository. It clones the
+   repository if not present and then builds it. If already present it
+   pulls the changes and then builds it.
 
 *** API Design
   :PROPERTIES:
@@ -869,9 +870,9 @@ class TestBuilSources(TestCase):
 
 ** REST API to push the docs into doc server
 
-This API is registered in the webhook provides an additonal functionality of 
-pushing the documents generated in the docs folder along with the already existing 
-Continuous Integration services.
+   This API is registered in the webhook provides an additonal functionality of 
+   pushing the documents generated in the docs folder into doc server
+
    
 *** API Design
   :PROPERTIES:
@@ -1278,9 +1279,9 @@ class TestWebHook(TestCase):
 #+END_SRC
 ** REST API to deploy the service/lab using ADS
  
- This API will be called if registered with the webhook.It provides an additional 
- functionality over the prexisiting functionilties of ci_hook and push_docs APIS of passing the  
- the repository URL to the ADS controller so as to invoke the auto depolyement process. 
+   This API will be called if registered with the webhook.It provides an additional 
+   functionality over the prexisiting functionilties of ci_hook and push_docs APIS of passing the  
+   the repository URL to the ADS controller so as to invoke the auto depolyement process. 
  
 *** API Design
   :PROPERTIES:
