@@ -68,9 +68,13 @@
           "configure": [],
           "pre_build": [],
           "build": [
-            
+              "cd ../;make build"
           ],
           "post_build": [
+	      "cp -R ../build/code/* /var/www/",
+              "chmod -R 755 /var/www",
+              "mkdir /var/www/logs",
+              "chmod -R 777 /var/www/logs"
           ],
           "status": []
         }
@@ -91,17 +95,9 @@
           "min_required": "10gb"
         },
         "installer": [
-          "apt-get update",
-          "apt-get install python-pip python-dev nginx",
-          "pip install virtualenv",
-          "virtualenv myproject'",
-          "source myprojectenv/bin/activate",
-          "pip install gunicorn flask",
-	  "deactivate",
-	  "sudo vim /etc/init/myproject.conf",
-	  "sudo start myproject",
-	  "sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled",
-	  "sudo service nginx restart"
+	    "bash /var/www/deployment/setup.sh",
+	    "python /var/www/deployment/setup.py install",
+            "bash /var/www/deployment/configure.sh"
         ],
         "lab_actions": {
           "init"    : [],
