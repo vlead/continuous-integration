@@ -54,7 +54,7 @@ ABS_PATH_DS=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 update_apache_config() {
   WSGI_SCRIPT="ci-service.wsgi"
-  APACHE_VHOST_FILE="/etc/apache2/sites-available/default"
+  APACHE_VHOST_FILE="/etc/apache2/sites-available/000-default.conf"
 
   sed -i "/<\/VirtualHost>/i \
     WSGIScriptAlias / $ABS_PATH_DS/$WSGI_SCRIPT
