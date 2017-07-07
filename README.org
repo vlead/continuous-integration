@@ -3,11 +3,24 @@
 
 
 - Sign in, then select the related repository you own.
+
 - Click on "Settings" on the right panel.
+
 - Then click on "Webhooks & Services" on the left panel.
+
 - Click on the "Add WebHook" Button.
+
 - Paste the copied URL in the URL form field.
+
+- Use this API Documentation to add the URL.
+#+BEGIN_SRC
+https://github.com/vlead/continuous-integration/blob/develop/src/runtime/rest/api.org#rest-api-to-build-the-souces-of-github-repository
+#+END_SRC
+
 - Select "application/json" as the content type.
+
 - Select "Let me select individual events" and check "Issues".
+
 - Leave the "Active" checkbox checked.
+
 - Click on "Add webhook" to save the webhook.
