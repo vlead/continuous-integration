@@ -475,7 +475,6 @@ class TesteRepoExist(unittest.TestCase):
 #+END_SRC
 
 
-
 ** REST API to build the souces of github repository
    This API if registered with in a respective webhook will be invoked
    whenever a new commit is pushed onto the repository. It clones the
@@ -655,55 +654,53 @@ class TesteRepoExist(unittest.TestCase):
 @api.route("/ci_build_sources", methods = ['POST', 'GET'])
 def build_repo():
 
-    if request.method == "GET":
-	return "Method not allowed"
-
-    elif request.method == 'POST':
-	repo_data = request.get_json()
-	git_url = repo_data['repository']['html_url']
-	current_app.logger.debug("Git repository URL : %s" % (git_url))
-
+    if request.method == 'POST':
+	try:
+	    repo_data = request.get_json()
+	    git_url = repo_data['repository']['html_url']
+	    current_app.logger.debug("Git repository URL : %s" % (git_url))
+	except Exception as e:
+	    current_app.logger.error("Error in request data : %s" % (str(e)))
+	    raise str(e)
     else:
 	return "Method not allowed"
 
     repo = RepoClone(git_url)
-    cmd_status = repo.repoCloner()
+    ret_status = repo.repoCloner()
 
-    if cmd_status == True:
+    if ret_status == True:
 	(repo_name, repo_author) = repoNameExtacter(git_url)  
-	rtb = RepoBuild(git_url)
-	status = rtb.repoBuilder()
+	repo_build = RepoBuild(git_url)
+	status = repo_build.repoBuilder()
 
 	if status == True:
 	    message = {
-	              "status" : 200,
-		      "message" : "Successfully build the sources"
+		      "status" : 200,
+		      "message" : "Successfully built the sources"
 		      }
-            current_app.logger.debug("Message %s" % (message))
+	    current_app.logger.debug("Message %s" % (message))
 	    return jsonify(message)
-		
+
 	else:
-            message = {
-	              "status" : 500,
-		      "message" : "Failed to run make file"
+	    message = {
+		      "status" : 500,
+		      "message" : "Failed to build the source"
 		      }
-            current_app.logger.error("Message %s" % (message))
+	    current_app.logger.error("Message %s" % (message))
 	    return jsonify(message)
-	    
+
 
     else:
-        message = {
-	          "status" : 500,
+	message = {
+		  "status" : 500,
 		  "message" : "Failed to clone repo"
 		  }
-        current_app.logger.error("Message %s" % (message))
+	current_app.logger.error("Message %s" % (message))
 	return jsonify(message)
-	
-   
 
 #+END_SRC
 
-*** Integration Test for the above API.
+*** Test Cases
 #+NAME: test_build_sources
 #+BEGIN_SRC python
 class TestBuilSources(TestCase):
@@ -860,12 +857,11 @@ class TestBuilSources(TestCase):
 	}
 
 
-	response = self.client.post("/build_sources", data=json.dumps(payload),
+	response = self.client.post("/ci_build_sources", data=json.dumps(payload),
 				 headers=headers)
 	self.assertEqual(response.status_code, 200)
 
 #+END_SRC
-
 
 
 ** REST API to push the docs into doc server
@@ -1031,17 +1027,27 @@ class TestBuilSources(TestCase):
 #+BEGIN_EXAMPLE
 {
 "status_code" : 200,
-"message" : "Successfully copied docs to server" 
+"message" : "Successfully copied docs to doc server" 
 }
 #+END_EXAMPLE    
   - Error Response:
     + Contents :
-      {"status" : "error"}
-    
+      {
+      "status" : 500,
+      "message" : "Error in copying docs to docs server"
+      }
+    + {
+      "status" : 500,
+      "message" : "Failed to build the sources"
+      }
+    + {
+      "status" : 500,
+      "message" : "Failed to clone repository"
+      }
   - Example:
 
 #+BEGIN_EXAMPLE
- http://localhost:5000/ci_hook
+ http://localhost:5000/ci_push_docs
 #+END_EXAMPLE
 
 *** Implementation   
@@ -1054,24 +1060,24 @@ class TestBuilSources(TestCase):
 @api.route("/ci_push_docs", methods = ['POST', 'GET'])
 def ci_push_docs():
 
-    if request.method == "GET":
-	return "Method not allowed"
-
-    elif request.method == 'POST':
-	repo_data = request.get_json()
-	git_url = repo_data['repository']['html_url']
-	current_app.logger.debug("Git repository URL : %s" % (git_url))
-
+    if request.method == 'POST':
+	try:
+	    repo_data = request.get_json()
+	    git_url = repo_data['repository']['html_url']
+	    current_app.logger.debug("Git repository URL : %s" % (git_url))
+	except Exception as e:
+	    current_app.logger.error("Exception : %s" % (str(e)))
+	    raise str(e)
     else:
 	return "Method not allowed"
 
     repo = RepoClone(git_url)
-    cmd_status = repo.repoCloner()
+    ret_status = repo.repoCloner()
 
-    if cmd_status == True:
+    if ret_status == True:
 	(repo_name, repo_author) = repoNameExtacter(git_url)  
-	rtb = RepoBuild(git_url)
-	status = rtb.repoBuilder()
+	repo_build = RepoBuild(git_url)
+	status = repo_build.repoBuilder()
 
 	if status == True:
 	    status = docsPusher(repo_name)  
@@ -1079,42 +1085,42 @@ def ci_push_docs():
 	    if status == True:
 		current_app.logger.debug("Successfully copied the docs to doc server")
 		message = {
-	               "status_code" : 200,
-	               "message" : "Successfully copied docs to server" 
+		       "status_code" : 200,
+		       "message" : "Successfully copied docs to doc server" 
 		       }
 
 		return jsonify(message)
-		
+
 	    else:
 		message = {
-		          "status" : 500,
-			  "message" : "Unable to copy files to docs server"
+			  "status" : 500,
+			  "message" : "Error in copying docs to docs server"
 			  }
-	        current_app.logger.error("Message %s" % (message))
+		current_app.logger.error("Message %s" % (message))
 		return jsonify(message)
-		
+
 	else:
-            message = {
-	              "status" : 500,
-		      "message" : "Failed to run make file"
+	    message = {
+		      "status" : 500,
+		      "message" : "Failed to build the sources"
 		      }
-            current_app.logger.error("Message %s" % (message))
+	    current_app.logger.error("Message %s" % (message))
 	    return jsonify(message)
-	    
+
 
     else:
-        message = {
-	          "status" : 500,
-		  "message" : "Failed to clone repo"
+	message = {
+		  "status" : 500,
+		  "message" : "Failed to clone repository"
 		  }
-        current_app.logger.error("Message %s" % (message))
+	current_app.logger.error("Message %s" % (message))
 	return jsonify(message)
-	
+        
    
 
 #+END_SRC
 
-*** Integration Test
+*** Test Cases
 This an integration test for the above API.
 #+NAME: test_ci_push_docs
 #+BEGIN_SRC python
@@ -1279,9 +1285,10 @@ class TestWebHook(TestCase):
 #+END_SRC
 ** REST API to deploy the service/lab using ADS
  
-   This API will be called if registered with the webhook.It provides an additional 
-   functionality over the prexisiting functionilties of ci_hook and push_docs APIS of passing the  
-   the repository URL to the ADS controller so as to invoke the auto depolyement process. 
+   This API will be called if registered with the webhook.It provides
+   an additional functionality over the prexisiting functionilties of
+   ci_hook and push_docs APIS of passing the the repository URL to the
+   ADS controller so as to invoke the auto depolyement process.
  
 *** API Design
   :PROPERTIES:
@@ -1448,8 +1455,9 @@ class TestWebHook(TestCase):
 }
 #+END_EXAMPLE    
   - Error Response:
+    + Status_code : 401
     + Contents :
-      {"status" : "error"}
+      {"status" : "Unauthorized credentials"}
     
   - Example:
 #+BEGIN_EXAMPLE
@@ -1460,25 +1468,24 @@ class TestWebHook(TestCase):
 #+BEGIN_SRC python
 @api.route("/ci_deploy_repo", methods = ['POST', 'GET'])
 def deploy_repo():
-
-    if request.method == "GET":
-	return "Method not allowed"
-
-    elif request.method == 'POST':
-	repo_data = request.get_json()
-	git_url = repo_data['repository']['html_url']
-	current_app.logger.debug("Git repository URL : %s" % (git_url))
-
+    if request.method == 'POST':
+	try:
+	    repo_data = request.get_json()
+	    git_url = repo_data['repository']['html_url']
+	    current_app.logger.debug("Git repository URL : %s" % (git_url))
+	except Exception as e:
+	    current_app.logger.error("Exception : %s" % (str(e)))
+	    raise str(e)
     else:
 	return "Method not allowed"
 
     repo = RepoClone(git_url)
-    cmd_status = repo.repoCloner()
+    ret_status = repo.repoCloner()
 
-    if cmd_status == True:
+    if ret_status == True:
 	(repo_name, repo_author) = repoNameExtacter(git_url)  
-	rtb = RepoBuild(git_url)
-	status = rtb.repoBuilder()
+	repo_build = RepoBuild(git_url)
+	status = repo_build.repoBuilder()
 
 	if status == True:
 	    lab_id = repo_name
@@ -1498,14 +1505,21 @@ def deploy_repo():
 		r = requests.post(ADS_URL, data=json.dumps(data), headers=headers)
 		if r.status_code == 200:
 		    if r.text == "Test failed: See log file for errors":
-			return "Error"
+			message = {
+			    "lab_id" : lab_id,
+			    "lab_src_url" : lab_url,
+			    "version" : tag,
+			    "Status" : "Error in deploying lab using ADS"
+			    }
+
+			return jsonify(message)
 		    else:
 			data['url'] = "http://" + r.text
 			return jsonify(data)
 		elif r.status_code == 401:
 		    current_app.logger.error("error code = %s" % str(r.status_code))
 		    return "Unauthorized credentials"
-		    
+
 		else:
 		    return "Error"
 	    except Exception as e:
@@ -1533,7 +1547,7 @@ def deploy_repo():
 
 #+END_SRC
 
-*** Integration Test for the above API 
+*** Test Cases
 
 #+NAME: test_deploy_repo
 #+BEGIN_SRC python
