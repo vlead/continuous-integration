@@ -411,7 +411,7 @@ class TestePushDocs(unittest.TestCase):
 	    rb = RepoBuild(self.git_url)
 	    rb.repoBuilder()
             (repo_name, repo_org) = repoNameExtacter(self.git_url)
-	    docsPusher(repo_name):
+	    docsPusher(repo_name)
 	    self.assertEqual(docsPusher(repo_name), True)
 
 #+END_SRC
