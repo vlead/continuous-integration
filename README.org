@@ -12,10 +12,7 @@
 
 - Paste the copied URL in the URL form field.
 
-- Use this API Documentation to add the URL.
-#+BEGIN_SRC
-https://github.com/vlead/continuous-integration/blob/develop/src/runtime/rest/api.org#rest-api-to-build-the-souces-of-github-repository
-#+END_SRC
+- Use this API Documentation to add the URL, click [[./src/runtime/rest/api.org#rest-api-to-build-the-souces-of-github-repository][here]].
 
 - Select "application/json" as the content type.
 
