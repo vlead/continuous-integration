@@ -1,110 +1,24 @@
+#+TITLE: Deploying the applications on a server
+#+AUTHOR: VLEAD
+#+DATE: [2017-06-07 Tue]
+#+SETUPFILE: ../org-templates/level-1.org
+#+TAGS: boilerplate(b)
+#+EXCLUDE_TAGS: boilerplate
+#+OPTIONS: ^:nil
 
- Install pip and nginx
 
-#+BEGIN_EXAMPLE
-sudo apt-get update
-sudo apt-get install python-pip python-dev nginx
-#+END_EXAMPLE
+* Introduction
+  This document will illustrate installation of all the dependencies required
+  for setting up the application.
 
- Create a Python Virtual Environment
 
-#+BEGIN_EXAMPLE
-sudo pip instal virtualenv
-#+END_EXAMPLE
+* Deploy vlead ci micro service
 
- Create a virtual environment to store
+  https://github.com/vlead/continuous-integration/blob/develop/src/deployment/ci_microservice/index.org
 
-#+BEGIN_EXAMPLE
-virtualenv myprojectenv
-#+END_EXAMPLE
 
- Activate the virtual environment
-#+BEGIN_EXAMPLE
-source myprojectenv/bin/activate
-#+END_EXAMPLE
 
- Install flask and gunicorn in the virtual environment
-#+BEGIN_EXAMPLE
-pip install gunicorn flask
-#+END_EXAMPLE
+* Deploy Jenkins CI server
+  
+  https://github.com/vlead/continuous-integration/tree/develop/src/deployment/jenkins
 
- Run and test the flask file
-#+BEGIN_EXAMPLE
-python myproject.py
-#+END_EXAMPLE
-
- Test Gunicorn
-#+BEGIN_EXAMPLE
-cd home/user/myproject
-gunicorn --bind 0.0.0.0:8000 wsgi
-#+END_EXAMPLE 
-
- Open your browser and type in your ip address with the port 
-#+BEGIN_EXAMPLE
-127.0.0.1:8000
-#+END_EXAMPLE
-
- Deactivate the virtual environment
-#+BEGIN_EXAMPLE
-deactivate
-#+END_EXAMPLE
-
- Create an upstart script
-#+BEGIN_EXAMPLE
-sudo vim /etc/init/myproject.conf
-#+END_EXAMPLE
-
- Define the conditions where the script should start and end
-#+BEGIN_EXAMPLE
-description "Gunicorn application server running myproject"
-
-start on runlevel [2345]
-stop on runlevel [!2345]
-#+END_EXAMPLE
-
- Define the user and group that Gunicorn should be run as(add this to myproject.conf)
-#+BEGIN_EXAMPLE
-respawn
-setuid user
-setgid www-data
-#+END_EXAMPLE
-
- Create a socket file within our project directory, set umask value so that the socket file is created giving access to the owner and group, while restricting other access, then pass in the WSGI entry point file name
-#+BEGIN_EXAMPLE
-envPATH=/home/srikar/myproject/myprojectenv/bin
-chdir /home/user/myproject
-exec gunicorn --workers 3 --bind unix:myproject.sock -m 007 wsgi
-#+End_EXAMPLE
-
- Start the project
-#+BEGIN_EXAMPLE
-sudo start myproject
-#+End_EXAMPLE
-
- Proxy requests, configuring nginx
-#+BEGIN_EXAMPLE
-sudo vim /etc/nginx/sites-available/myproject
-#+End_EXAMPLE
-
- Copy the code into the myproject file in the previous directory
-#+BEGIN_EXAMPLE
-server {
-    listen 80;
-    server_name server_domain_or_IP;
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/user/myproject/myproject.sock;
-    }
-}
-#+End_EXAMPLE
-
- To enable the Nginx server block configuration we've just created, link the file to the sites-enabled directory
-#+BEGIN_EXAMPLE
-sudo ln -s /etc/nginx/sites-available/myproject /etc/nginx/sites-enabled
-#+End_EXAMPLE
-
- Restart Nginx
-#+BEGIN_EXAMPLE
-sudo service nginx restart
-#+End_EXAMPLE

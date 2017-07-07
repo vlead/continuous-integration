@@ -1,6 +1,6 @@
-#+TITLE: REST Interface for Continuous Integration
+#+TITLE: REST Interface for Continuous Integration Service
 #+AUTHOR: VLEAD
-#+DATE: [2016-06-07 Tue]
+#+DATE: [2017-06-29 Thur]
 #+SETUPFILE: ../../org-templates/level-2.org
 #+TAGS: boilerplate(b)
 #+EXCLUDE_TAGS: boilerplate

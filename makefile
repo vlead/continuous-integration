@@ -1,6 +1,6 @@
 #SHELL := /bin/bash
 
-CODE_DIR=build/code/imp
+CODE_DIR=build/code/
 PWD=$(shell pwd)
 LINT_FILE=${PWD}/${CODE_DIR}/lint_output
 EXIT_FILE=${PWD}/exit.txt
@@ -16,7 +16,7 @@ build: init
 
 
 py-tests:
-	export PYTHONPATH=${PWD}/${CODE_DIR}; cd ${PWD}/${CODE_DIR}; python -m unittest discover
+	export PYTHONPATH=${PWD}/${CODE_DIR}; find ${PWD}/${CODE_DIR} -name '*test_*.py' -exec python '{}' \;
 
 clean:	
 	make -f tangle-make clean
