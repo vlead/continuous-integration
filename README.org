@@ -1,0 +1,13 @@
+* Adding a webhook, runthrough.
+
+
+
+- Sign in, then select the related repository you own.
+- Click on "Settings" on the right panel.
+- Then click on "Webhooks & Services" on the left panel.
+- Click on the "Add WebHook" Button.
+- Paste the copied URL in the URL form field.
+- Select "application/json" as the content type.
+- Select "Let me select individual events" and check "Issues".
+- Leave the "Active" checkbox checked.
+- Click on "Add webhook" to save the webhook.
