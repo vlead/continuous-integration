@@ -1,5 +1,3 @@
-
-
 * Continuous Integration Service
 ** Run CI service on development environment
 - Install pip and nginx
@@ -24,12 +22,6 @@ virtualenv ci-service
 #+BEGIN_EXAMPLE
 source ci-service/bin/activate
 #+END_EXAMPLE
-
-- Install flask and in the virtual environment
-#+BEGIN_EXAMPLE
-pip install flask
-#+END_EXAMPLE
-
 - Clone the repository
 #+BEGIN_EXAMPLE
 git clone https://github.com/vlead/continuous-integration.git
@@ -39,6 +31,12 @@ git clone https://github.com/vlead/continuous-integration.git
 cd continuous-integration
 make
 #+END_EXAMPLE
+- Install pre-requisites inside virutal environment
+#+BEGIN_EXAMPLE
+cd build/code/deployment
+python setup.py install
+#+END_EXAMPLE
+
 - export =PYTHONPATH=
 #+BEGIN_EXAMPLE
 cd build/code
