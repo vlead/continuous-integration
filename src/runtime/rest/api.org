@@ -476,10 +476,13 @@ class TesteRepoExist(unittest.TestCase):
 
 
 ** REST API to build the souces of github repository
-   This API if registered with in a respective webhook will be invoked
-   whenever a new commit is pushed onto the repository. It clones the
-   repository if not present and then builds it. If already present it
-   pulls the changes and then builds it.
+   - This API clones/pulls the repository and then builds the
+     sources. If build is failed to generate it will create an issue
+     on respective repository by assigning label called =build_failed=
+     otherwise =build_passed=.
+
+   - This API is invoked from github repository as a webhook request
+     as soon as a new tag is released.
 
 *** API Design
   :PROPERTIES:
@@ -865,10 +868,17 @@ class TestBuilSources(TestCase):
 
 
 ** REST API to push the docs into doc server
+   - This API clones/pulls the repository and then builds the
+     sources. If build is failed to generate it will create an issue
+     on respective repository by assigning label called =build_failed=
+     otherwise =build_passed=.
 
-   This API is registered in the webhook provides an additonal functionality of 
-   pushing the documents generated in the docs folder into doc server
+   - After build ran successfully all the literate documentation of
+     the repository will be moved into =doc-server=
 
+   - This API is invoked from github repository as a webhook request
+     as soon as a new tag is released.
+   
    
 *** API Design
   :PROPERTIES:
@@ -1284,11 +1294,16 @@ class TestWebHook(TestCase):
 
 #+END_SRC
 ** REST API to deploy the service/lab using ADS
- 
-   This API will be called if registered with the webhook.It provides
-   an additional functionality over the prexisiting functionilties of
-   ci_hook and push_docs APIS of passing the the repository URL to the
-   ADS controller so as to invoke the auto depolyement process.
+   - This API clones/pulls the repository and then builds the
+     sources. If build is failed to generate it will create an issue
+     on respective repository by assigning label called =build_failed=
+     otherwise =build_passed=.
+
+   - After build ran successfully this repository will be deployed on
+     =staging-server= using ADS service =RESTfull API's=.
+
+   - This API is invoked from github repository as a webhook request
+     as soon as a new tag is released.
  
 *** API Design
   :PROPERTIES:
