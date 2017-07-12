@@ -14,6 +14,7 @@ sitemap*
 lint_output
 *.py
 *.pyc
+~
 venv/
 elisp
 literate-tools/
