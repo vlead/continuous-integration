@@ -201,9 +201,9 @@ vacuum = true
 
 die-on-term = true
 #+END_EXAMPLE
-** Create an Upstart File to Manage the App =emacs /etc/init/myapp.conf=
+** Create an Upstart File to Manage the App =emacs /etc/init/ci-service.conf=
 #+BEGIN_EXAMPLE
-description "uWSGI instance to serve myapp"
+description "uWSGI instance to serve ci-service"
 
 start on runlevel [2345]
 stop on runlevel [!2345]
@@ -219,7 +219,7 @@ end script
 #+END_EXAMPLE
  - Now, we can start the service by typing:
 #+BEGIN_EXAMPLE
-sudo start myapp
+sudo start ci-service
 #+END_EXAMPLE
 
 ** Configure Nginx to Proxy to uWSGI =emacs /etc/nginx/sites-available/ci-service=
