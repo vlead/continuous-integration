@@ -161,7 +161,12 @@ apt-get install python-dev python-pip nginx
    Python environment from any others that may exist on the system
 #+BEGIN_EXAMPLE
 pip install virtualenv
-mkdir -p /var/www/ci-service
+git clone https://github.com/vlead/continuous-integration
+cd continuous-integration
+git checkout develop
+make
+rsync -avz --progress build/code/ /var/www/ci-service
+cd /var/www/ci-service
 virtualenv venv
 source venv/bin/activate
  
