@@ -232,7 +232,7 @@ server {
 #+END_EXAMPLE
 - Enable the server configuration we just made by linking it to the sites-enabled directory:
 #+BEGIN_EXAMPLE
-ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled
+ln -s /etc/nginx/sites-available/ci-service /etc/nginx/sites-enabled
 #+END_EXAMPLE
  - Check the configuration file for syntax errors:
 #+BEGIN_EXAMPLE
@@ -241,4 +241,8 @@ service nginx configtest
  - Restart nginx server
 #+BEGIN_EXAMPLE
 service nginx restart
+#+END_EXAMPLE
+ - Access the application
+#+BEGIN_EXAMPLE
+http://localhost
 #+END_EXAMPLE
