@@ -1,4 +1,4 @@
-#+TITLE: Feature To NOtify about Tests
+#+TITLE: Feature To Notify Status of Tests
 #+AUTHOR: VLEAD
 #+DATE: [2016-07-26 Tue]
 #+SETUPFILE: ../../org-templates/level-2.org
