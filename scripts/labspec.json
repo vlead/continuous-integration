@@ -95,9 +95,21 @@
           "min_required": "10gb"
         },
         "installer": [
-	    "bash /var/www/deployment/setup.sh",
-	    "python /var/www/deployment/setup.py install",
-            "bash /var/www/deployment/configure.sh"
+	    "apt-get update",
+	    "apt-get install python-dev python-pip nginx",
+            "pip install virtualenv",
+	    "git clone https://github.com/vlead/continuous-integration",
+	    "cd continuous-integration",
+	    "git checkout develop",
+	    "make",
+	    "rsync -avz --progress build/code/ /var/www/ci-service",
+	    "cd /var/www/ci-service"
+	    "virtualenv venv"
+	    "source venv/bin/activate",
+	    "pip install uwsgi flask requests pyyml flask_cors",
+	    "ln -s /etc/nginx/sites-available/ci-service /etc/nginx/sites-enabled",
+	    "service nginx configtest",
+	    "service nginx restart"	
         ],
         "lab_actions": {
           "init"    : [],
