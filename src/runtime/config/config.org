@@ -63,7 +63,7 @@ IP_ADDRESS = "root@ipaddress"
 # Git repository branch name to be tested/deployed
 
 GIT_BRANCH = "develop"
-
+GIT_CLONE_LOC = "/home/vlead/"
 #+END_SRC
   
 

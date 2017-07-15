@@ -12,6 +12,442 @@
 
 
 * REST  
+  
+** Execute Git Commands
+*** get_git_clone_loc
+**** implemenation
+
+#+NAME: git_clone_loc    
+#+BEGIN_SRC python
+class GitCommands:
+
+    git_clone_loc = None
+
+    def __init__(self):
+        self.git_clone_loc = GIT_CLONE_LOC
+        current_app.logger.debug("GIT_CLONE_LOC = %s" % str(self.git_clone_loc))
+
+    def get_git_clone_loc(self):
+        return self.git_clone_loc
+
+#+END_SRC
+**** test cases
+
+#+NAME: test_git_clone_loc
+#+BEGIN_SRC python
+
+class TestGetGitLoc(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.git_url = "https://github.com/vlead/lab-data-service"
+
+    def tearDown(self):
+        pass
+
+    def test_get_git_loc(self):
+        print "test_get_git_loc"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            clone_loc = git.get_git_clone_loc()
+            self.assertEqual(clone_loc, GIT_CLONE_LOC)
+
+#+END_SRC
+
+*** construct repo
+**** implemenation
+#+NAME: construct_repo 
+#+BEGIN_SRC python
+
+    def construct_repo_name(self, lab_src_url):
+        # sample lab_src_url: git@github.com:vlead/ovpl.git
+        current_app.logger.debug("lab_src_url: %s" % lab_src_url)
+        repo = lab_src_url.split('/')[-1]
+        repo_name = (repo[:-4] if repo[-4:] == ".git" else repo)
+        current_app.logger.debug("repo_name: %s" % repo_name)
+        return str(repo_name)
+#+END_SRC
+**** test cases
+
+#+NAME: test_construct_repo
+#+BEGIN_SRC python
+
+class TestConstructRepo(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.git_url = "https://github.com/vlead/lab-data-service"
+
+    def tearDown(self):
+        pass
+
+    def test_construct_repo(self):
+        print "test_construct_repo"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            repo_name1 = self.git_url.split("/")[-1]
+            self.assertEqual(repo_name, repo_name1)
+
+#+END_SRC
+
+*** construct org
+**** implementation
+#+NAME: construct_org 
+#+BEGIN_SRC python
+
+    def construct_org_name(self, lab_src_url):
+        # sample lab_src_url: git@github.com:vlead/ovpl.git
+        current_app.logger.debug("lab_src_url: %s" % lab_src_url)
+        org_name = lab_src_url.split('/')[-2]
+        current_app.logger.debug("org_name: %s" % org_name)
+        return str(org_name)
+#+END_SRC
+**** test cases
+
+#+NAME: test_construct_org
+#+BEGIN_SRC python
+
+class TestConstructOrg(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.git_url = "https://github.com/vlead/lab-data-service"
+
+    def tearDown(self):
+        pass
+
+    def test_construct_org(self):
+        print "test_construct_org"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            org_name = git.construct_org_name(self.git_url)
+            org_name1 = self.git_url.split("/")[-2]
+            self.assertEqual(org_name, org_name1)
+
+#+END_SRC
+
+*** repo exists
+**** implemenation
+#+NAME: repo_exist 
+#+BEGIN_SRC python
+
+    def repo_exists(self, repo_name):
+        current_app.logger.debug("dir = %s" % (self.git_clone_loc + repo_name))
+        return os.path.isdir(self.git_clone_loc + repo_name)
+#+END_SRC
+**** test cases
+
+#+NAME: test_repo_exist
+#+BEGIN_SRC python
+
+class TestRepoExist(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.create_app()
+        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.git_clone_loc = self.git.git_clone_loc
+
+    def tearDown(self):
+        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        shutil.rmtree(repo_path)
+
+    def test_repo_exist(self):
+        print "test_repo_exist"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            git.clone_repo(self.git_url, repo_name)
+            self.assertEqual(git.repo_exists(repo_name), True)
+
+#+END_SRC
+
+*** clone repo
+**** implementation
+#+NAME: repo_clone 
+#+BEGIN_SRC python
+
+    def clone_repo(self, lab_src_url, repo_name):
+        clone_cmd = "git clone %s %s%s" % (lab_src_url, self.git_clone_loc,
+                                           repo_name)
+        current_app.logger.debug(clone_cmd)
+        try:
+            (ret_code, output) = execute_command(clone_cmd)
+            current_app.logger.debug("Clone repo successful")
+        except Exception, e:
+            current_app.logger.error("Error Cloning the repository: " + str(e))
+            raise e
+#+END_SRC
+**** test cases
+
+#+NAME: test_clone_repo
+#+BEGIN_SRC python
+
+class TestCloneRepo(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.create_app()
+        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.git_clone_loc = self.git.git_clone_loc
+
+    def tearDown(self):
+        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        shutil.rmtree(repo_path)
+
+    def test_repo_clone(self):
+        print "test_repo_clone"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            git.clone_repo(self.git_url, repo_name)
+            self.assertEqual(git.repo_exists(repo_name), True)
+
+#+END_SRC
+
+*** pull repo
+
+#+NAME: repo_pull
+#+BEGIN_SRC python
+
+    def pull_repo(self, repo_name, version):
+        repo = self.git_clone_loc + repo_name
+        #pull_cmd = "git --git-dir=%s/.git --work-tree=%s pull" % (repo, repo)
+        pull_cmd = "git -C %s pull origin %s" % (repo, version)
+        current_app.logger.debug("pull cmd: %s" % pull_cmd)
+        try:
+            (ret_code, output) = execute_command(pull_cmd)	    
+            current_app.logger.debug("Pull repo successful")
+	    return ret_code
+        except Exception, e:
+            current_app.logger.error("Error Pulling the repository: " + str(e))
+            raise e
+#+END_SRC
+**** test cases
+
+#+NAME: test_repo_pull
+#+BEGIN_SRC python
+
+class TestRepoPull(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.create_app()
+        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.git_clone_loc = self.git.git_clone_loc
+
+    def tearDown(self):
+        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        shutil.rmtree(repo_path)
+
+    def test_repo_pull(self):
+        print "test_repo_pull"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            git.clone_repo(self.git_url, repo_name)
+	    git.checkout_version(repo_name, version="develop")
+	    pull_status = git.pull_repo(repo_name, version="develop")
+            self.assertEqual(pull_status, 0)
+
+#+END_SRC
+
+*** checkout version
+**** implementation
+#+NAME: repo_version
+#+BEGIN_SRC python
+
+    def checkout_version(self, repo_name, version=None):
+        repo = self.git_clone_loc + repo_name
+        if version is None:
+            version = "master"
+        checkout_cmd = "git --git-dir=%s/.git --work-tree=%s checkout %s" % (repo, repo, version)
+        try:
+            (ret_code, output) = execute_command(checkout_cmd)
+            current_app.logger.debug("Checkout repo successful")
+        except Exception, e:
+            current_app.logger.error("Error checking out the repository: " + str(e))
+            raise e
+#+END_SRC
+**** test cases
+
+#+NAME: test_repo_version
+#+BEGIN_SRC python
+
+class TestRepoVersion(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.create_app()
+        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.git_clone_loc = self.git.git_clone_loc
+
+    def tearDown(self):
+        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        shutil.rmtree(repo_path)
+
+    def test_repo_version(self):
+        print "test_repo_version"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            git.clone_repo(self.git_url, repo_name)
+	    git.checkout_version(repo_name, version="develop")
+            self.assertEqual(git.get_repo_version(repo_name), "develop")
+
+#+END_SRC
+
+*** get git version
+**** implementation
+#+NAME: get_repo_version
+#+BEGIN_SRC python
+
+    def get_repo_version(self, repo_name):
+        repo_path = self.git_clone_loc + repo_name
+        try:
+	   repo = Repo(repo_path)
+	   branch = repo.active_branch
+	   return str(branch.name)
+        except Exception, e:
+            current_app.logger.error("Error checking out the repository: " + str(e))
+            raise e
+#+END_SRC
+**** test cases
+
+#+NAME: test_get_repo_version
+#+BEGIN_SRC python
+
+class TestGetRepoVersion(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.create_app()
+        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.git_clone_loc = self.git.git_clone_loc
+
+    def tearDown(self):
+        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        shutil.rmtree(repo_path)
+
+    def test_get_repo_version(self):
+        print "test_get_repo_version"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            git.clone_repo(self.git_url, repo_name)
+	    git.checkout_version(repo_name, version="develop")
+            self.assertEqual(git.get_repo_version(repo_name), "develop")
+
+#+END_SRC
+
+** Execute Shell Commands
+
+#+NAME: execute_shell_cmd
+#+BEGIN_SRC python
+
+import subprocess
+#from __init__ import *
+
+__all__ = ['execute_command']
+
+# Backporting check_output from 2.7 to 2.6
+if "check_output" not in dir(subprocess):
+    def f(*popenargs, **kwargs):
+        if 'stdout' in kwargs:
+            raise ValueError(
+                'stdout argument not allowed, it will be overridden'
+            )
+        process = subprocess.Popen(stdout=subprocess.PIPE,
+                                   *popenargs, **kwargs)
+        output, unused_err = process.communicate()
+        retcode = process.poll()
+        if retcode:
+            cmd = kwargs.get("args")
+            if cmd is None:
+                cmd = popenargs[0]
+            raise subprocess.CalledProcessError(retcode, cmd)
+        return output
+    subprocess.check_output = f
+
+
+def execute_command(cmd):
+    return_code = -1
+    output = None
+    try:
+        output = subprocess.check_output(cmd, shell=True)
+        return_code = 0
+    except subprocess.CalledProcessError as cpe:
+        raise cpe
+    except OSError as ose:
+        raise ose
+
+    return (return_code, output)
+
+
+if __name__ == '__main__':
+    '''
+    cmd = "git clone " +\
+        "https://github.com/Virtual-Labs/computer-programming-iiith.git " \
+        "/root/labs/cse02-programming"
+   '''
+    cmd = "ls -la"
+
+    try:
+        (ret_code, output) = execute_command(cmd)
+    except Exception, e:
+        pass
+
+
+#+END_SRC
 
 ** Clone repository
   :PROPERTIES:
@@ -24,7 +460,7 @@
   of failure and success.
 
 *** Implementation
-#+NAME: clone_repo
+#+NAME: clone_repository
 #+BEGIN_SRC python
 class RepoClone:
 
@@ -58,7 +494,7 @@ class RepoClone:
 *** Unit Test for RepoClone 
 This runs a unit test on the functionality provided by the above class
 
-#+NAME: test_clone_repo
+#+NAME: a
 #+BEGIN_SRC python
 
 class TestClone(unittest.TestCase):
@@ -166,7 +602,6 @@ class TestBuild(unittest.TestCase):
             self.assertEqual(rb.repoBuilder(), True)
 
 #+END_SRC
-
 
 ** Execute shell commands
   :PROPERTIES:
@@ -424,7 +859,7 @@ class TestePushDocs(unittest.TestCase):
 This function is used to check the validity of the github repository (i.e. it's existence).
 
 *** Implementation
-#+NAME: repo_exist
+#+NAME: repository_exist
 #+BEGIN_SRC python
 
 def isRepoExist(repo_name):
@@ -449,7 +884,7 @@ def isRepoExist(repo_name):
 #+END_SRC
 
 *** Unit Test for the above function.
-#+NAME: test_repo_exist
+#+NAME: test_repo_exists
 #+BEGIN_SRC python
 
 class TesteRepoExist(unittest.TestCase):
@@ -1729,9 +2164,29 @@ class TestDeployRepo(TestCase):
 
 * Infra                                                         :boilerplate:
   
-** sources
-*** Imports 
-#+name: imports_for_sources
+** Imports
+
+*** git imports
+#+name: imports_for_git
+#+BEGIN_SRC python
+# -*- coding: utf-8 -*-
+from runtime.config.git_config import *
+import os
+from execute_commands import *
+from flask import current_app
+from git import Repo
+#+end_src
+
+*** execute commands
+#+name: imports_for_exec_cmd
+#+BEGIN_SRC python
+# -*- coding: utf-8 -*-
+import subprocess
+#from __init__ import *
+
+#+END_SRC
+*** api imports 
+#+name: imports_for_api
 #+BEGIN_SRC python
 # -*- coding: utf-8 -*-
 import requests
@@ -1742,12 +2197,12 @@ from runtime.config.git_config import USERNAME, PASSWORD, IP_ADDRESS, DEST_DIR, 
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
 from flask import Flask
+from runtime.rest.git_commands import *
 import yaml
 api = Blueprint('APIs', __name__)
 import os
 
 #+end_src
-
 
 ** tests
 *** Imports 
@@ -1777,20 +2232,31 @@ if __name__ == '__main__':
 
 * Tangle                                                        :boilerplate:
   
-** sources
+** sources for git module
+#+BEGIN_SRC python :tangle git_commands.py :eval no :noweb yes
+<<imports_for_git>>
+<<git_clone_loc>>
+<<construct_repo>>
+<<construct_org>>
+<<repo_exist>>
+<<repo_clone>>
+<<repo_pull>>
+<<repo_version>>
+<<get_repo_version>>
+#+END_SRC
+
+** source for api layer
 #+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 
-<<imports_for_sources>>
-<<build_repo>>
-<<clone_repo>>
-<<exec_commands>>
-<<repo_exist>>
-<<get_repo_name>>
-<<create_issue>>
-<<push_docs>>
+<<imports_for_api>>
 <<ci_build_sources>>
-<<ci_deploy_repo>>
-<<ci_push_docs>>
+
+#+END_SRC
+
+** source for for execute command
+#+BEGIN_SRC python :tangle execute_commands.py :eval no :noweb yes
+<<imports_for_exec_cmd>>
+<<execute_shell_cmd>>
 
 #+END_SRC
 
@@ -1799,6 +2265,12 @@ if __name__ == '__main__':
 #+BEGIN_SRC python :tangle test_api.py :eval no :noweb yes
 <<imports_for_tests>>
 <<test_clone_repo>>
+<<test_repo_pull>>
+<<test_get_repo_version>>
+<<test_repo_exist>>
+<<test_construct_org>>
+<<test_construct_repo>>
+<<test_git_clone_loc>>
 #<<test_build_repo>>
 #<<test_exec_cmd>>
 #<<test_push_docs>>
