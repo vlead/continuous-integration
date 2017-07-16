@@ -1117,7 +1117,6 @@ class TesteRepoExist(unittest.TestCase):
 
 #+END_SRC
 
-
 ** REST API to build the souces of github repository
    - This API clones/pulls the repository and then builds the
      sources. If build is failed to generate it will create an issue
@@ -2110,28 +2109,29 @@ def deploy_repo():
 	    raise str(e)
     else:
 	return "Method not allowed"
+    git = GitCommands()
+    tr = TestRun(git_url)    
+    repo_name = git.construct_repo_name(git_url)
 
-    repo = RepoClone(git_url)
-    ret_status = repo.repoCloner()
+    if git.repo_exists(repo_name):
+	git.pull_repo(repo_name, GIT_BRANCH)    
+    else:
+	git.clone_repo(git_url, repo_name)
+    git.checkout_version(repo_name, GIT_BRANCH)
+    repo_build = RepoBuild(git_url)
+    repo_build.repoBuilder()
 
-    if ret_status == True:
-	(repo_name, repo_author) = repoNameExtacter(git_url)  
-	repo_build = RepoBuild(git_url)
-	status = repo_build.repoBuilder()
-
-	if status == True:
-	    lab_id = repo_name
-	    lab_url = git_url
-	    tag = GIT_BRANCH
-	    if tag == "":
-		tag = "master"
-		data = {'lab_id': lab_id, 'lab_src_url': lab_url, 'version': tag, \
-			'key' : ADS_SECRET_KEY, "current_user" : session.get('current_user')}
-		current_app.logger.debug("lab_id = %s, lab_src_url=%s, "
-					 "version=%s, key=%s, "
-					 %(lab_id, lab_url, tag, ADS_SECRET_KEY))
-
-		headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    tr.createTestEnv()
+    if tr.runTestSuit():
+	lab_id = repo_name
+	lab_url = git_url
+	tag = GIT_BRANCH
+	if tag == "":
+	    tag = "master"
+	    data = {'lab_id': lab_id, 'lab_src_url': lab_url, 'version': tag, \
+		    'key' : ADS_SECRET_KEY, "current_user" : session.get('current_user')}
+	    current_app.logger.debug("Deploy request details = %s" % (data))
+	    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
 	    try:
 		r = requests.post(ADS_URL, data=json.dumps(data), headers=headers)
@@ -2142,40 +2142,21 @@ def deploy_repo():
 			    "lab_src_url" : lab_url,
 			    "version" : tag,
 			    "Status" : "Error in deploying lab using ADS"
-			    }
+			}
 
-			return jsonify(message)
+			abort(500, message)
 		    else:
 			data['url'] = "http://" + r.text
+			current_app.logger.debug("Hosted details = %s" % (data))
 			return jsonify(data)
 		elif r.status_code == 401:
 		    current_app.logger.error("error code = %s" % str(r.status_code))
-		    return "Unauthorized credentials"
-
+		    abort(401, "Unauthorized request")
 		else:
-		    return "Error"
+		    abort(500)
 	    except Exception as e:
 		current_app.logger.error("error code = %s" % str(e))
 		raise str(e)
-
-	else:
-	    message = {
-		      "status" : 500,
-		      "message" : "Failed to run make file"
-		      }
-	    current_app.logger.error("Message %s" % (message))
-	    return jsonify(message)
-
-
-    else:
-	message = {
-		  "status" : 500,
-		  "message" : "Failed to clone repo"
-		  }
-	current_app.logger.error("Message %s" % (message))
-	return jsonify(message)
-        
-   
 
 #+END_SRC
 
@@ -2195,8 +2176,8 @@ class TestDeployRepo(TestCase):
     def tearDown(self):
 	pass
 
-    def test_ci_build_sources(self):
-	print "test_ci_build_sources"
+    def test_ci_deploy_repo(self):
+	print "test_ci_deploy_repo"
 
 	headers = {'Content-Type': 'application/json'}
 	payload = {
@@ -2250,7 +2231,7 @@ class TestDeployRepo(TestCase):
 		    "site_admin": "false"
 		},
 		"private": "false",
-		"html_url": "https://github.com/ksripathi/lab-data-service",
+		"html_url": "https://github.com/ksripathi/test-project",
 		"description": "null",
 		"fork": "true",
 		"url": "https://api.github.com/repos/ksripathi/lab-data-service",
@@ -2442,6 +2423,7 @@ if __name__ == '__main__':
 <<push_docs>>
 <<ci_build_sources>>
 <<ci_push_docs>>
+<<ci_deploy_repo>>
 #+END_SRC
 
 ** source for for execute command
@@ -2472,8 +2454,8 @@ if __name__ == '__main__':
 #<<test_extract_repo>>
 #<<test_repo_exist>>
 #<<test_get_commit_info>>
-<<test_ci_push_docs>>
+#<<test_ci_push_docs>>
 #<<test_ci_build_sources>>
-#<<test_ci_deploy_repo>>
+<<test_ci_deploy_repo>>
 <<run_test_cases>>
 #+end_src

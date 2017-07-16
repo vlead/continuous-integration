@@ -58,7 +58,7 @@ GIT_API = "https://api.github.com/repos"
 DEST_DIR = '/var/www'
 
 # Doc server ip_address
-IP_ADDRESS = "root@ipaddress"
+IP_ADDRESS = "root@127.0.0.1"
 
 # Git repository branch name to be tested/deployed
 
