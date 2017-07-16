@@ -503,7 +503,7 @@ class TesteCreateGitIssue(unittest.TestCase):
         return app
 
     def setUp(self):
-	self.git_url = "https://github.com/ksripathi/Documents" 
+	self.git_url = "https://github.com/ksripathi/test-project1" 
 
     def tearDown(self):
 	pass
@@ -2128,41 +2128,46 @@ def deploy_repo():
 	tag = GIT_BRANCH
 	if tag == "":
 	    tag = "master"
-	    data = {'lab_id': lab_id, 'lab_src_url': lab_url, 'version': tag, \
-		    'key' : ADS_SECRET_KEY, "current_user" : session.get('current_user')}
-	    current_app.logger.debug("Deploy request details = %s" % (data))
-	    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-
-	    try:
-		r = requests.post(ADS_URL, data=json.dumps(data), headers=headers)
-		if r.status_code == 200:
-		    if r.text == "Test failed: See log file for errors":
-			message = {
-			    "lab_id" : lab_id,
-			    "lab_src_url" : lab_url,
-			    "version" : tag,
-			    "Status" : "Error in deploying lab using ADS"
-			}
-
-			abort(500, message)
-		    else:
-			data['url'] = "http://" + r.text
-			current_app.logger.debug("Hosted details = %s" % (data))
-			return jsonify(data)
-		elif r.status_code == 401:
-		    current_app.logger.error("error code = %s" % str(r.status_code))
-		    abort(401, "Unauthorized request")
+	data = {'lab_id': lab_id, 'lab_src_url': lab_url, 'version': tag, \
+		'key' : ADS_SECRET_KEY, "current_user" : "ci-service"}
+	current_app.logger.debug("Deploy request details = %s" % (data))
+	headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+	git = GitCommands()
+	try:
+	    r = requests.post(ADS_URL, data=json.dumps(data), headers=headers)
+	    if r.status_code == 200:
+		if r.text == "Test failed: See log file for errors":
+		    message = {
+			"lab_id" : lab_id,
+			"lab_src_url" : lab_url,
+			"version" : tag,
+			"Status" : "Error in deploying lab using ADS"
+		    }
+		    title = "Error in deploying app on testing server"
+		    labels = []		      
+		    ret_status = git.makeGithubIssue(git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+		    abort(500, message)
 		else:
-		    abort(500)
-	    except Exception as e:
-		current_app.logger.error("error code = %s" % str(e))
-		raise str(e)
+		    data['url'] = "http://" + r.text                      
+		    title = "Successfully Deployed on Testing Server"
+		    labels = []		      
+		    ret_status = git.makeGithubIssue(git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+		    current_app.logger.debug("Hosted details = %s" % (data))
+		    return jsonify(data)
+	    elif r.status_code == 401:
+		current_app.logger.error("error code = %s" % str(r.status_code))
+		abort(401, "Unauthorized request")
+	    else:
+		abort(500)
+	except Exception as e:
+	    current_app.logger.error("error code = %s" % str(e))
+	    raise str(e)
 
 #+END_SRC
 
 *** Test Cases
 
-#+NAME: test_deploy_repo
+#+NAME: test_ci_deploy_repo
 #+BEGIN_SRC python
 class TestDeployRepo(TestCase):
     TESTING = True
@@ -2445,7 +2450,7 @@ if __name__ == '__main__':
 #<<test_construct_repo>>
 #<<test_git_clone_loc>>
 #<<test_execute_shell_cmd>>
-#<<test_create_issue>>
+<<test_create_issue>>
 #<<test_build_repo>>
 #<<test_run_test>>
 #<<test_exec_cmd>>
@@ -2456,6 +2461,6 @@ if __name__ == '__main__':
 #<<test_get_commit_info>>
 #<<test_ci_push_docs>>
 #<<test_ci_build_sources>>
-<<test_ci_deploy_repo>>
+#<<test_ci_deploy_repo>>
 <<run_test_cases>>
 #+end_src
