@@ -70,7 +70,7 @@ class TestGetGitLoc(unittest.TestCase):
 
 #+END_SRC
 
-*** construct repo
+*** construct_repo_name
   :PROPERTIES:
   :CUSTOM_ID: get_repo_name_ref
   :END:    
@@ -120,7 +120,7 @@ class TestConstructRepo(unittest.TestCase):
 
 #+END_SRC
 
-*** construct org
+*** construct_org_name
   :PROPERTIES:
   :CUSTOM_ID: get_repo_org_ref
   :END:    
@@ -169,7 +169,7 @@ class TestConstructOrg(unittest.TestCase):
 
 #+END_SRC
 
-*** repo exists
+*** repo_exists
   :PROPERTIES:
   :CUSTOM_ID: exist_repository
   :END:    
@@ -218,7 +218,7 @@ class TestRepoExist(unittest.TestCase):
 
 #+END_SRC
 
-*** clone repo
+*** clone_repo
 **** implementation
 #+NAME: repo_clone 
 #+BEGIN_SRC python
@@ -267,7 +267,7 @@ class TestCloneRepo(unittest.TestCase):
 
 #+END_SRC
 
-*** pull repo
+*** pull_repo
 
 #+NAME: repo_pull
 #+BEGIN_SRC python
@@ -320,7 +320,7 @@ class TestRepoPull(unittest.TestCase):
 
 #+END_SRC
 
-*** checkout version
+*** checkout_branch
 **** implementation
 #+NAME: repo_version
 #+BEGIN_SRC python
@@ -371,7 +371,7 @@ class TestRepoVersion(unittest.TestCase):
 
 #+END_SRC
 
-*** get git version
+*** get_git_branch
 **** implementation
 #+NAME: get_repo_version
 #+BEGIN_SRC python
@@ -420,7 +420,7 @@ class TestGetRepoVersion(unittest.TestCase):
 
 #+END_SRC
 
-*** get git commit info
+*** get_git_commit_info
 **** implementation
 #+NAME: get_commit_info
 #+BEGIN_SRC python
@@ -478,15 +478,16 @@ class TestGetCommitInfo(unittest.TestCase):
 
 #+END_SRC
 
-*** Create an issue on github repository
+*** create_issue
   :PROPERTIES:
   :CUSTOM_ID: git_issue
   :END:    
  
- This function creates a required github issue and assigns the respective label to it
- in a particular repository. This is helps in notifying the
- project's contributors about the consequences of different commits
- i.e. whether it results in a successful build or not. 
+ This function creates a required github issue and assigns the
+ respective label to it in a particular repository. This is helps in
+ notifying the project's contributors about the consequences of
+ different commits i.e. whether it results in a successful build or
+ not.
 
 **** Implementation
 #+NAME: create_issue
@@ -497,7 +498,7 @@ class TestGetCommitInfo(unittest.TestCase):
 	repo_org = self.construct_org_name(git_url)
 	git_api_url = '%s/%s/%s/issues' % (GIT_API, repo_org, repo_name)
 	current_app.logger.debug("Git REST API URL : %s" % (git_api_url))
-	body = self.get_commit_info(repo_name)
+	#body = self.get_commit_info(repo_name)
 	try:
 	    import json
 	    session = requests.Session()
@@ -546,10 +547,165 @@ class TesteCreateGitIssue(unittest.TestCase):
             git = GitCommands()
             title = "test issue"
  	    labels = ["build_failed"]
+	    if not git.git_label_exists(self.git_url, labels[0]):
+	        git.create_label(self.git_url, labels[0])
 	    ret_status = git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
             self.assertEqual(ret_status, True)
 
 #+END_SRC
+
+*** create_issue_label
+  :PROPERTIES:
+  :CUSTOM_ID: git_label
+  :END:    
+ 
+ This function creates a required github issue and assigns the
+ respective label to it in a particular repository. This is helps in
+ notifying the project's contributors about the consequences of
+ different commits i.e. whether it results in a successful build or
+ not.
+
+**** Implementation
+#+NAME: create_label
+#+BEGIN_SRC python
+
+    def create_label(self, git_url, label):
+	repo_name = self.construct_repo_name(git_url)
+	repo_org = self.construct_org_name(git_url)
+	git_api_url = '%s/%s/%s/labels' % (GIT_API, repo_org, repo_name)
+	current_app.logger.debug("Git REST API URL : %s" % (git_api_url))
+	
+	body = self.get_commit_info(repo_name)
+	try:
+	    import json
+	    session = requests.Session()
+	    session.auth = (USERNAME, PASSWORD)
+	    issue = {'name': label,
+	            'color': "f29513"
+		    }
+
+	    current_app.logger.debug("Creating issue label on git repository = %s " % (git_url))
+	    r = session.post(git_api_url, json.dumps(issue))
+	    if r.status_code == 201:
+		current_app.logger.debug("Successfully created Issue label with name : %s on repository = %s" % (label, git_url))
+		return True
+	    else:
+		current_app.logger.error("Could not creat label : %s on repository = %s" % (label, git_url))
+		current_app.logger.error("Response : %s" % r.content)
+		return False
+	except Exception as e:
+	    current_app.logger.error("Exception : %s" % str(e))
+	    raise str(e)
+
+#+END_SRC
+
+**** test cases
+#+NAME: test_create_label
+#+BEGIN_SRC python
+
+class TesteCreateLabel(unittest.TestCase):
+    def create_app(self):
+        app = create_app(config)
+        return app        
+
+    def setUp(self):
+	self.git_url = "https://github.com/ksripathi/test-project1" 
+
+    def tearDown(self):
+	app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+	    repo_name = git.construct_repo_name(self.git_url)
+	    org_name = git.construct_org_name(self.git_url)
+	    label = "tests_passed"
+	    DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, label)
+	    session = requests.Session()
+	    USERNAME = "ksripathi"
+	    PASSWORD = "sudswathi1993&"
+	    session.auth = (USERNAME, PASSWORD)
+	    print DEL_URL
+	    session.delete(DEL_URL)
+
+    def test_create_git_label(self):
+        print "test_create_git_label"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+	    label = "tests_passed"
+	    self.assertEqual(git.create_label(self.git_url, label), True)
+
+#+END_SRC
+
+*** git_label_exists
+  :PROPERTIES:
+  :CUSTOM_ID: git_label
+  :END:    
+ 
+ This function creates a required github issue and assigns the
+ respective label to it in a particular repository. This is helps in
+ notifying the project's contributors about the consequences of
+ different commits i.e. whether it results in a successful build or
+ not.
+ 
+**** Implementation
+#+NAME: git_label_exists
+#+BEGIN_SRC python
+
+    def git_label_exists(self, git_url, label):
+	repo_name = self.construct_repo_name(git_url)
+	repo_org = self.construct_org_name(git_url)
+	git_api_url = '%s/%s/%s/labels/%s' % (GIT_API, repo_org, repo_name, label)
+	current_app.logger.debug("Git REST API URL : %s" % (git_api_url))
+
+	try:
+	    r = requests.get(git_api_url)
+	    if r.status_code == 201:
+		return True
+	    elif r.status_code == 404:
+	        return False
+	except Exception as e:
+	    current_app.logger.error("Exception : %s" % str(e))
+	    raise str(e)
+
+#+END_SRC
+
+**** test cases
+#+NAME: test_git_label_exists
+#+BEGIN_SRC python
+
+class TesteLabelExists(unittest.TestCase):
+    def create_app(self):
+        app = create_app(config)
+        return app
+
+    def setUp(self):
+	self.git_url = "https://github.com/ksripathi/test-project1" 
+
+    def tearDown(self):
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+	    repo_name = git.construct_repo_name(self.git_url)
+	    org_name = git.construct_org_name(self.git_url)
+	    label = "tests_passed"
+	    DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, label)
+	    session = requests.Session()
+	    USERNAME = "ksripathi"
+	    PASSWORD = "sudswathi1993&"
+	    session.auth = (USERNAME, PASSWORD)
+	    print DEL_URL
+	    session.delete(DEL_URL)
+
+    def test_git_label_exists(self):
+        print "test_git_label_exists"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+	    label = "tests_passed"
+	    self.assertEqual(git.create_label(self.git_url, label), True)
+
+#+END_SRC
+
 
 ** Execute Shell Commands
 *** implementation
@@ -779,6 +935,7 @@ class TestRun:
 	sys.path.append(src_path)
 	count = 0
 	try:
+	    body = self.get_commit_info(self.repo_name)
 	    for test_file in test_files:
 		cmd = "export PYTHONPATH=$(pwd);python %s" % (test_file)
 		(ret_code, output) = execute_command(cmd)
@@ -787,15 +944,18 @@ class TestRun:
 		    count = count + 1
             if count == len(test_files):
 	        title = "successfully ran all test cases"
-		labels = ["build_passed"]
-		body = "Ran test files : %s" %(test_files)
-		self.git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+		labels = ["ran_test_cases"]
+		if not self.git.git_label_exists(self.git_url, labels[0]):
+		    self.git.create_label(self.git_url, labels[0])
+		self.git.makeGithubIssue(self.git_url, title, body, assignee=None, milestone=None, labels=labels)
 		return True
 	except Exception as e:
 	    current_app.logger.error("Couldn't Ran test file = %s" % (test_file))
 	    title = "Failed to run test file %s" % (test_file)
 	    labels = ["build_failed"]
-	    self.git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+	    if not self.git.git_label_exists(self.git_url, labels[0]):
+	        self.git.create_label(self.git_url, labels[0])
+	    self.git.makeGithubIssue(self.git_url, title, body, assignee=None, milestone=None, labels=labels)
 	    current_app.logger.error("Exception = %s" % (str(e)))
 	    return False
 
@@ -843,67 +1003,6 @@ class TestCreateTestEnv(unittest.TestCase):
 
 #+END_SRC
 
-** Execute shell commands
-  :PROPERTIES:
-  :CUSTOM_ID: execute_cmd
-  :END:    
-
-*** Implementation
-   This is a utility function which executes the linux command and returns
-   status code to identify the success or failiure of execution of the respective command on the machine.
-   This function is extensively used by the other functions.
-
-#+NAME: exec_commands
-#+BEGIN_SRC python
-
-def linuxCommandExecuter(cmd):
-    current_app.logger.debug("command: %s" % cmd)
-    
-    return_code = -1 #If the linux command executes successfully it returns zero
-    output = None
-    
-    try:
-        output = subprocess.check_output(cmd, shell=True)
-        return_code = 0
-    
-    except subprocess.CalledProcessError as cpe:
-        current_app.logger.error("Called Process Error Message: %s" % cpe.output)
-        raise cpe
-    
-    except OSError as ose:
-        current_app.logger.error("OSError: %s" % ose.output)
-        raise ose
-
-    return (return_code, output)
-
-#+END_SRC
-
-*** Unit Test for the above function 
-#+NAME: test_exec_cmd
-#+BEGIN_SRC python
-
-class TesteExecuteCommand(unittest.TestCase):
-    
-    def create_app(self):
-        app = create_app(config)
-        return app
-
-    def setUp(self):
-	pass
-
-    def tearDown(self):
-	pass
-
-    def test_command_executer(self):
-	print "test_command_executer"
-        app = self.create_app()
-        with app.app_context():
-            url = "https://github.com/vlead/lab-data-service.git"        
-            (ret_code, output) = linuxCommandExecuter("ls")
-            self.assertEqual(ret_code, 0)
-
-#+END_SRC
-
 ** Push docs to doc server 
   :PROPERTIES:
   :CUSTOM_ID: doc_push
@@ -923,11 +1022,18 @@ def docsPusher(repo_name):
     git_clone_loc = git.git_clone_loc
     SRC_DIR = ("%s/build/docs/" % (git_clone_loc + repo_name))
     try:
-        IP_ADDRESS = "root@127.0.0.1"
-        copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
+        IP_ADDRESS = "localhost"
+        copy_command = "rsync -arz --progress " + SRC_DIR + " " + USER + "@" + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
         current_app.logger.debug("copy command = %s" % copy_command)
         (ret_code, output) = execute_command(copy_command)
         if ret_code == 0:
+	    #body = git.get_commit_info(repo_name)
+	    body = "http://%s/%s" % (IP_ADDRESS, repo_name)
+	    title = "Published docs on doc server"
+	    labels = ["docs_published"]		   
+	    if not git.git_label_exists(git_url, labels[0]):
+	        git.create_label(git_url, labels[0])
+	    ret_status = git.makeGithubIssue(git_url, title, body, assignee=None, milestone=None, labels=labels)
 	    current_app.logger.debug("Copied SRC_DIR = %s to DEST_DIR = %s/%s/%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
 	    return True
         else:
@@ -958,7 +1064,7 @@ class TestPushDocs(unittest.TestCase):
 
     def tearDown(self):
         repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
-        shutil.rmtree(repo_path)
+        #shutil.rmtree(repo_path)
 
     def test_push_docs(self):
         print "test_push_docs"
@@ -1999,14 +2105,18 @@ def deploy_repo():
 			"Status" : "Error in deploying lab using ADS"
 		    }
 		    title = "Error in deploying app on testing server"
-		    labels = []		      
-		    ret_status = git.makeGithubIssue(git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+		    labels = ["deploy_failed"]		   
+		    if not git.git_label_exists(git_url, labels[0]):
+	                git.create_label(git_url, labels[0])
+		    ret_status = git.makeGithubIssue(git_url, title, body=str(message), assignee=None, milestone=None, labels=labels)
 		    abort(500, message)
 		else:
 		    data['url'] = "http://" + r.text                      
 		    title = "Successfully Deployed on Testing Server"
-		    labels = []		      
-		    ret_status = git.makeGithubIssue(git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+		    labels = ["deployed"]		      
+		    if not git.git_label_exists(git_url, labels[0]):
+	                git.create_label(git_url, labels[0])
+		    ret_status = git.makeGithubIssue(git_url, title, body=str(data), assignee=None, milestone=None, labels=labels)
 		    current_app.logger.debug("Hosted details = %s" % (data))
 		    return jsonify(data)
 	    elif r.status_code == 401:
@@ -2218,7 +2328,7 @@ import requests
 import json
 import subprocess
 from runtime.config.ads_config import *
-from runtime.config.git_config import USERNAME, PASSWORD, IP_ADDRESS, DEST_DIR, GIT_API, GIT_BRANCH
+from runtime.config.git_config import *
 from flask import session, render_template, Blueprint, request, \
      jsonify, abort, current_app, redirect, url_for
 from flask import Flask
@@ -2272,6 +2382,8 @@ if __name__ == '__main__':
 <<get_repo_version>>
 <<create_issue>>
 <<get_commit_info>>
+<<create_label>>
+<<git_label_exists>>
 #+END_SRC
 
 ** source for api layer
@@ -2310,8 +2422,11 @@ if __name__ == '__main__':
 #<<test_exec_cmd>>
 #<<test_create_issue>>
 #<<test_get_commit_info>>
+<<test_push_docs>>
 #<<test_ci_push_docs>>
 #<<test_ci_build_sources>>
 #<<test_ci_deploy_repo>>
+#<<test_create_label>>
+#<<test_git_label_exists>>
 <<run_test_cases>>
 #+end_src
