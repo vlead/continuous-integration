@@ -15,6 +15,16 @@
   
 ** Execute Git Commands
 *** get_git_clone_loc
+  :PROPERTIES:
+  :CUSTOM_ID: clone_repository
+  :END:    
+  
+  This class contains a function which clones a repository if it is
+  already not present.If the repository is already present it pulls
+  the updated repository.  While performing the above actions it also
+  simultaneously logs the actions with the respective status of
+  failure and success.
+
 **** implemenation
 
 #+NAME: git_clone_loc    
@@ -61,6 +71,13 @@ class TestGetGitLoc(unittest.TestCase):
 #+END_SRC
 
 *** construct repo
+  :PROPERTIES:
+  :CUSTOM_ID: get_repo_name_ref
+  :END:    
+  
+   This function is used to extract the repository name from a given
+   github repository url.
+
 **** implemenation
 #+NAME: construct_repo 
 #+BEGIN_SRC python
@@ -104,6 +121,13 @@ class TestConstructRepo(unittest.TestCase):
 #+END_SRC
 
 *** construct org
+  :PROPERTIES:
+  :CUSTOM_ID: get_repo_org_ref
+  :END:    
+  
+   This function is used to extract organization name from a given
+   github repository url.
+
 **** implementation
 #+NAME: construct_org 
 #+BEGIN_SRC python
@@ -146,6 +170,13 @@ class TestConstructOrg(unittest.TestCase):
 #+END_SRC
 
 *** repo exists
+  :PROPERTIES:
+  :CUSTOM_ID: exist_repository
+  :END:    
+
+  This function is used to check the validity of the github repository
+  (i.e. it's existence).
+
 **** implemenation
 #+NAME: repo_exist 
 #+BEGIN_SRC python
@@ -522,6 +553,10 @@ class TesteCreateGitIssue(unittest.TestCase):
 
 ** Execute Shell Commands
 *** implementation
+   This is a utility function which executes the linux command and returns
+   status code to identify the success or failiure of execution of the respective command on the machine.
+   This function is extensively used by the other functions.
+
 #+NAME: execute_shell_cmd
 #+BEGIN_SRC python
 
@@ -606,75 +641,6 @@ class TestExecuteCmd(unittest.TestCase):
 	    command = "ls -l"
 	    (ret_code, output) = execute_command(command)
             self.assertEqual(ret_code, 0)
-
-#+END_SRC
-
-** Clone repository
-  :PROPERTIES:
-  :CUSTOM_ID: clone_repository
-  :END:    
-  
-  This class contains a function which clones a repository if it is already not present.If the 
-  repository is already present it pulls the updated repository.
-  While performing the above actions it also simultaneously logs the actions with the respective status 
-  of failure and success.
-
-*** Implementation
-#+NAME: clone_repository
-#+BEGIN_SRC python
-class RepoClone:
-
-    def __init__(self,git_url):
-	self.git_url = git_url
-
-    def repoCloner(self): #clone_repo before  
-	(repo_name, repo_author) = repoNameExtacter(self.git_url)
-	ret_val = isRepoExist(repo_name)
-
-	if not ret_val:
-	    command = "git clone %s; cd %s;git checkout %s;git pull" % (self.git_url, repo_name, GIT_BRANCH)
-	    current_app.logger.debug("Git clone command : %s" % (command))
-	    (ret_code, output) = linuxCommandExecuter(command)
-	    if ret_code == 0:
-		current_app.logger.debug("Successfully cloned repo : %s" % (self.git_url))
-		return True
-	else:
-	    current_app.logger.debug("repository already present, pulling repo : %s" % (self.git_url))
-	    command = "cd %s; git checkout %s;git pull" % (repo_name, GIT_BRANCH)
-	    (ret_code, output) = linuxCommandExecuter(command)
-	    if ret_code == 0:
-		current_app.logger.debug("Successfully pulls the repository : %s" % (self.git_url))
-		return True
-	    else:
-		current_app.logger.debug("Failed to pulls the repository : %s" % (self.git_url))
-		return False
-
-#+END_SRC
-
-*** Unit Test for RepoClone 
-This runs a unit test on the functionality provided by the above class
-
-#+NAME: a
-#+BEGIN_SRC python
-
-class TestClone(unittest.TestCase):
-    TESTING = True
-    def create_app(self):
-        app = create_app(config)
-        return app
-
-    def setUp(self):
-        self.git_url = "https://github.com/vlead/lab-data-service"
-
-    def tearDown(self):
-        shutil.rmtree("lab-data-service")
-
-    def test_ci_clone(self):
-        app = self.create_app()
-        with app.app_context():
-            print "test_ci_clone"
-            rc = RepoClone(self.git_url)
-            self.assertEqual(rc.repoCloner(), True)
 
 #+END_SRC
 
@@ -938,58 +904,6 @@ class TesteExecuteCommand(unittest.TestCase):
 
 #+END_SRC
 
-** Extract git repository and organization names 
-  :PROPERTIES:
-  :CUSTOM_ID: get_repo_org
-  :END:    
-  
-   This function is used to extract the repository name and it's
-   associated organization name from a given github repository url.
-
-*** Implementation
-#+NAME: get_repo_name
-#+BEGIN_SRC python
-
-def repoNameExtacter(repo_url): 
-
-    try:
-       repo_data = repo_url.split("/")
-       repo_name = repo_data[-1]
-       org_name = repo_data[-2]
-       current_app.logger.debug("repo_name %s, author_name = %s" % (repo_name, org_name))
-       return (repo_name, org_name)
-
-    except Exception as e:
-       current_app.logger.error("Exception %s" % (str(e)))
-       raise str(e)
-
-#+END_SRC
-
-*** Unit Test for the above funtion.
-#+NAME: test_extract_repo
-#+BEGIN_SRC python
-
-class TesteExtractRepo(unittest.TestCase):
-    def create_app(self):
-        app = create_app(config)
-        return app
-
-    def setUp(self):
-        self.git_url = "https://github.com/vlead/lab-data-service"        
-
-    def tearDown(self):
-	pass
-
-    def test_extract_repo(self):
-        print "test_extract_repo"
-        app = self.create_app()
-        with app.app_context():            
-            (repo_name, repo_org) = repoNameExtacter(self.url)
-            self.assertEqual(repo_name, "lab-data-service")
-            self.assertEqual(repo_org, "vlead")
-
-#+END_SRC
-
 ** Push docs to doc server 
   :PROPERTIES:
   :CUSTOM_ID: doc_push
@@ -1056,64 +970,6 @@ class TestPushDocs(unittest.TestCase):
             repo_build = RepoBuild(self.git_url)
 	    repo_build.repoBuilder()
             self.assertEqual(docsPusher(repo_name), True)
-
-#+END_SRC
-
-** Repo_exist
-  :PROPERTIES:
-  :CUSTOM_ID: exist_repository
-  :END:    
-
-This function is used to check the validity of the github repository (i.e. it's existence).
-
-*** Implementation
-#+NAME: repository_exist
-#+BEGIN_SRC python
-
-def isRepoExist(repo_name):
-    current_app.logger.debug("Checking repo %s existance" % (repo_name))
-    try:
-       ret_val = os.path.exists(repo_name)
-       if ret_val:
-           current_app.logger.debug("Repository = %s arleady exists" % (repo_name))
-           return ret_val
-       else:
-           current_app.logger.debug("Repository = %s not exists" % (repo_name))
-           return ret_val           
-
-    except subprocess.CalledProcessError as cpe:
-        current_app.logger.error("Called Process Error Message: %s" % cpe.output)
-        raise cpe
-
-    except OSError as ose:
-        current_app.logger.error("OSError: %s" % ose.output)
-        raise ose
-
-#+END_SRC
-
-*** Unit Test for the above function.
-#+NAME: test_repo_exists
-#+BEGIN_SRC python
-
-class TesteRepoExist(unittest.TestCase):
-    def create_app(self):
-        app = create_app(config)
-        return app
-
-    def setUp(self):
-	self.git_url = "https://github.com/vlead/lab-data-service"
-
-    def tearDown(self):
-        shutil.rmtree("lab-data-service")
-
-    def test_repo_exist(self):
-	print "test_repo_exist"
-        app = self.create_app()
-        with app.app_context():            
-            rc = RepoClone(self.git_url)
-            rc.repoCloner()
-            (repo_name, repo_org) = repoNameExtacter(self.git_url)
-            self.assertEqual(isRepoExist(repo_name), True)
 
 #+END_SRC
 
@@ -1498,7 +1354,6 @@ class TestBuilSources(TestCase):
 	self.assertEqual(response.status_code, 200)
 
 #+END_SRC
-
 
 ** REST API to push the docs into doc server
    - This API clones/pulls the repository and then builds the
@@ -2450,14 +2305,10 @@ if __name__ == '__main__':
 #<<test_construct_repo>>
 #<<test_git_clone_loc>>
 #<<test_execute_shell_cmd>>
-<<test_create_issue>>
 #<<test_build_repo>>
 #<<test_run_test>>
 #<<test_exec_cmd>>
-#<<test_push_docs>>
 #<<test_create_issue>>
-#<<test_extract_repo>>
-#<<test_repo_exist>>
 #<<test_get_commit_info>>
 #<<test_ci_push_docs>>
 #<<test_ci_build_sources>>
