@@ -620,8 +620,6 @@ class TesteCreateLabel(unittest.TestCase):
 	    label = "tests_passed"
 	    DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, label)
 	    session = requests.Session()
-	    USERNAME = "ksripathi"
-	    PASSWORD = "sudswathi1993&"
 	    session.auth = (USERNAME, PASSWORD)
 	    print DEL_URL
 	    session.delete(DEL_URL)
@@ -690,8 +688,6 @@ class TesteLabelExists(unittest.TestCase):
 	    label = "tests_passed"
 	    DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, label)
 	    session = requests.Session()
-	    USERNAME = "ksripathi"
-	    PASSWORD = "sudswathi1993&"
 	    session.auth = (USERNAME, PASSWORD)
 	    print DEL_URL
 	    session.delete(DEL_URL)
@@ -1017,13 +1013,13 @@ class TestCreateTestEnv(unittest.TestCase):
 #+NAME: push_docs
 #+BEGIN_SRC python
 
-def docsPusher(repo_name):
+def docsPusher(git_url, repo_name):
     git = GitCommands()
     git_clone_loc = git.git_clone_loc
     SRC_DIR = ("%s/build/docs/" % (git_clone_loc + repo_name))
     try:
-        IP_ADDRESS = "localhost"
-        copy_command = "rsync -arz --progress " + SRC_DIR + " " + USER + "@" + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
+        copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
+        #copy_command = "rsync -arz --progress " + SRC_DIR + " " + USER + "@" + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
         current_app.logger.debug("copy command = %s" % copy_command)
         (ret_code, output) = execute_command(copy_command)
         if ret_code == 0:
@@ -1034,7 +1030,7 @@ def docsPusher(repo_name):
 	    if not git.git_label_exists(git_url, labels[0]):
 	        git.create_label(git_url, labels[0])
 	    ret_status = git.makeGithubIssue(git_url, title, body, assignee=None, milestone=None, labels=labels)
-	    current_app.logger.debug("Copied SRC_DIR = %s to DEST_DIR = %s/%s/%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
+	    current_app.logger.debug("Copied SRC_DIR = %s to DEST_DIR = %s:%s%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
 	    return True
         else:
             current_app.logger.debug("Copy Unsuccessful from SRC_DIR = %s to DEST_DIR = %s/%s/%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
@@ -1075,7 +1071,7 @@ class TestPushDocs(unittest.TestCase):
             git.clone_repo(self.git_url, repo_name)
             repo_build = RepoBuild(self.git_url)
 	    repo_build.repoBuilder()
-            self.assertEqual(docsPusher(repo_name), True)
+            self.assertEqual(docsPusher(self.git_url, repo_name), True)
 
 #+END_SRC
 
@@ -1688,7 +1684,7 @@ def ci_push_docs():
     
     tr.createTestEnv()
     if tr.runTestSuit():
-        status = docsPusher(repo_name)  
+        status = docsPusher(git_url, repo_name)  
 	if status:
             current_app.logger.debug("Successfully copied the docs to doc server")
 	    message = {
