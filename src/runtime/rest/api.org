@@ -423,7 +423,7 @@ class TestGetRepoVersion(unittest.TestCase):
 	    current_app.logger.debug("Creating issue on git repository = %s under organization = %s" % (repo_name, repo_org))
 	    r = session.post(git_api_url, json.dumps(issue))
 	    if r.status_code == 201:
-		current_app.logger.debug("Successfully created Issue : %s on repository = %s" % (title, repo_name))
+		current_app.logger.debug("Successfully created Issue with title : %s on repository = %s" % (title, repo_name))
 		return True
 	    else:
 		current_app.logger.error("Could not creat Issue : %s on repository = %s" % (title, repo_name))
@@ -766,13 +766,14 @@ class TestRun:
 		labels = ["build_passed"]
 		body = "Ran test files : %s" %(test_files)
 		self.git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+		return True
 	except Exception as e:
 	    current_app.logger.error("Couldn't Ran test file = %s" % (test_file))
 	    title = "Failed to run test file %s" % (test_file)
 	    labels = ["build_failed"]
 	    self.git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
 	    current_app.logger.error("Exception = %s" % (str(e)))
-       
+	    return False
 
               
 #+END_SRC
@@ -946,8 +947,11 @@ class TesteExtractRepo(unittest.TestCase):
 #+BEGIN_SRC python
 
 def docsPusher(repo_name):
-    SRC_DIR = ("%s/build/docs/" % (repo_name))
+    git = GitCommands()
+    git_clone_loc = git.git_clone_loc
+    SRC_DIR = ("%s/build/docs/" % (git_clone_loc + repo_name))
     try:
+        IP_ADDRESS = "root@127.0.0.1"
         copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
         current_app.logger.debug("copy command = %s" % copy_command)
         (ret_code, output) = execute_command(copy_command)
@@ -964,32 +968,36 @@ def docsPusher(repo_name):
 
 #+END_SRC
 
-*** Unit Test for the above function which is responsible to push the docs.
+*** test cases
 #+NAME: test_push_docs
 #+BEGIN_SRC python
 
-class TestePushDocs(unittest.TestCase):
+class TestPushDocs(unittest.TestCase):
     def create_app(self):
         app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
         return app
 
     def setUp(self):
-	self.git_url = "https://github.com/vlead/lab-data-service"
+        self.create_app()
+        self.git_url = "https://github.com/ksripathi/test-project1"
+        self.git_clone_loc = self.git.git_clone_loc
 
     def tearDown(self):
-	shutil.rmtree("lab-data-service")
+        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        shutil.rmtree(repo_path)
 
     def test_push_docs(self):
-	print "test_push_docs"
+        print "test_push_docs"
         app = self.create_app()
         with app.app_context():
-	    rc = RepoClone(self.git_url)
-            rc.repoCloner()
-	    rb = RepoBuild(self.git_url)
-	    rb.repoBuilder()
-            (repo_name, repo_org) = repoNameExtacter(self.git_url)
-	    docsPusher(repo_name)
-	    self.assertEqual(docsPusher(repo_name), True)
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            git.clone_repo(self.git_url, repo_name)
+            repo_build = RepoBuild(self.git_url)
+	    repo_build.repoBuilder()
+            self.assertEqual(docsPusher(repo_name), True)
 
 #+END_SRC
 
@@ -1232,7 +1240,7 @@ class TesteRepoExist(unittest.TestCase):
 #+NAME: ci_build_sources
 #+BEGIN_SRC python
 @api.route("/ci_build_sources", methods = ['POST', 'GET'])
-def build_repo():
+def build_sources():
 
     if request.method == 'POST':
 	try:
@@ -1244,36 +1252,27 @@ def build_repo():
 	    raise str(e)
     else:
 	return "Method not allowed"
+    git = GitCommands()
+    repo_name = git.construct_repo_name(git_url)
 
-    repo = RepoClone(git_url)
-    ret_status = repo.repoCloner()
-
-    if ret_status == True:
-	(repo_name, repo_author) = repoNameExtacter(git_url)  
-	repo_build = RepoBuild(git_url)
-	status = repo_build.repoBuilder()
-
-	if status == True:
-	    message = {
-		      "status" : 200,
-		      "message" : "Successfully built the sources"
-		      }
-	    current_app.logger.debug("Message %s" % (message))
-	    return jsonify(message)
-
-	else:
-	    message = {
-		      "status" : 500,
-		      "message" : "Failed to build the source"
-		      }
-	    current_app.logger.error("Message %s" % (message))
-	    return jsonify(message)
-
+    if git.repo_exists(repo_name):
+        git.pull_repo(repo_name, GIT_BRANCH)	
+    else:
+        git.clone_repo(git_url, repo_name)
+    git.checkout_version(repo_name, GIT_BRANCH)
+    repo_build = RepoBuild(git_url)
+    if (repo_build.repoBuilder()):
+        message = {
+	          "status" : 200,
+		  "message" : "Successfully builds the sources"
+		  }
+        current_app.logger.debug("Message %s" % (message))
+	return jsonify(message)
 
     else:
-	message = {
+        message = {
 		  "status" : 500,
-		  "message" : "Failed to clone repo"
+		  "message" : "Failed to build the source"
 		  }
 	current_app.logger.error("Message %s" % (message))
 	return jsonify(message)
@@ -1281,7 +1280,7 @@ def build_repo():
 #+END_SRC
 
 *** Test Cases
-#+NAME: test_build_sources
+#+NAME: test_ci_build_sources
 #+BEGIN_SRC python
 class TestBuilSources(TestCase):
     TESTING = True
@@ -1350,7 +1349,7 @@ class TestBuilSources(TestCase):
 		    "site_admin": "false"
 		},
 		"private": "false",
-		"html_url": "https://github.com/ksripathi/lab-data-service",
+		"html_url": "https://github.com/ksripathi/test-project1",
 		"description": "null",
 		"fork": "true",
 		"url": "https://api.github.com/repos/ksripathi/lab-data-service",
@@ -1657,53 +1656,36 @@ def ci_push_docs():
 	    raise str(e)
     else:
 	return "Method not allowed"
+    git = GitCommands()
+    tr = TestRun(git_url)    
+    repo_name = git.construct_repo_name(git_url)
 
-    repo = RepoClone(git_url)
-    ret_status = repo.repoCloner()
-
-    if ret_status == True:
-	(repo_name, repo_author) = repoNameExtacter(git_url)  
-	repo_build = RepoBuild(git_url)
-	status = repo_build.repoBuilder()
-
-	if status == True:
-	    status = docsPusher(repo_name)  
-
-	    if status == True:
-		current_app.logger.debug("Successfully copied the docs to doc server")
-		message = {
-		       "status_code" : 200,
-		       "message" : "Successfully copied docs to doc server" 
-		       }
-
-		return jsonify(message)
-
-	    else:
-		message = {
-			  "status" : 500,
-			  "message" : "Error in copying docs to docs server"
-			  }
-		current_app.logger.error("Message %s" % (message))
-		return jsonify(message)
-
-	else:
+    if git.repo_exists(repo_name):
+        git.pull_repo(repo_name, GIT_BRANCH)	
+    else:
+        git.clone_repo(git_url, repo_name)
+    git.checkout_version(repo_name, GIT_BRANCH)
+    repo_build = RepoBuild(git_url)
+    repo_build.repoBuilder()
+    
+    tr.createTestEnv()
+    if tr.runTestSuit():
+        status = docsPusher(repo_name)  
+	if status:
+            current_app.logger.debug("Successfully copied the docs to doc server")
 	    message = {
-		      "status" : 500,
-		      "message" : "Failed to build the sources"
+	              "status_code" : 200,
+		      "message" : "Successfully copied docs to doc server" 
 		      }
-	    current_app.logger.error("Message %s" % (message))
-	    return jsonify(message)
-
+	return jsonify(message)
 
     else:
-	message = {
-		  "status" : 500,
-		  "message" : "Failed to clone repository"
+        message = {
+	          "status" : 500,
+		  "message" : "Error in copying docs to docs server"
 		  }
 	current_app.logger.error("Message %s" % (message))
-	return jsonify(message)
-        
-   
+	abort(500, message)
 
 #+END_SRC
 
@@ -1711,7 +1693,7 @@ def ci_push_docs():
 This an integration test for the above API.
 #+NAME: test_ci_push_docs
 #+BEGIN_SRC python
-class TestWebHook(TestCase):
+class TestPushDocs(TestCase):
     TESTING = True
     def create_app(self):
 	app = create_app(config)
@@ -1723,8 +1705,8 @@ class TestWebHook(TestCase):
     def tearDown(self):
 	pass
 
-    def test_ci_web_hook(self):
-	print "test_ci_web_hook"
+    def test_ci_push_docs(self):
+	print "test_ci_push_docs"
 
 	headers = {'Content-Type': 'application/json'}
 	payload = {
@@ -1778,7 +1760,7 @@ class TestWebHook(TestCase):
 		    "site_admin": "false"
 		},
 		"private": "false",
-		"html_url": "https://github.com/ksripathi/lab-data-service",
+		"html_url": "https://github.com/ksripathi/test-project1",
 		"description": "null",
 		"fork": "true",
 		"url": "https://api.github.com/repos/ksripathi/lab-data-service",
@@ -2397,8 +2379,9 @@ if __name__ == '__main__':
 <<imports_for_api>>
 <<build_repo>>
 <<run_test>>
+<<push_docs>>
 <<ci_build_sources>>
-
+<<ci_push_docs>>
 #+END_SRC
 
 ** source for for execute command
@@ -2422,14 +2405,14 @@ if __name__ == '__main__':
 #<<test_execute_shell_cmd>>
 #<<test_create_issue>>
 #<<test_build_repo>>
-<<test_run_test>>
+#<<test_run_test>>
 #<<test_exec_cmd>>
 #<<test_push_docs>>
 #<<test_create_issue>>
 #<<test_extract_repo>>
 #<<test_repo_exist>>
-#<<test_ci_push_docs>>
-#<<test_build_sources>>
+<<test_ci_push_docs>>
+#<<test_ci_build_sources>>
 #<<test_ci_deploy_repo>>
 <<run_test_cases>>
 #+end_src
