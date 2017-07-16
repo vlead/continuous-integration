@@ -389,6 +389,64 @@ class TestGetRepoVersion(unittest.TestCase):
 
 #+END_SRC
 
+*** get git commit info
+**** implementation
+#+NAME: get_commit_info
+#+BEGIN_SRC python
+
+    def get_commit_info(self, repo_name):
+        repo_path = self.git_clone_loc + repo_name
+        try:
+	   repo = Repo(repo_path)
+	   master = repo.head.reference
+	   commit_info = {
+	                 "branch" : master.name,
+			 "last_commit" : master.commit.hexsha,
+			 "last_commit_msg" : master.commit.message,
+			 "commit_date" : datetime.datetime.fromtimestamp(master.commit.committed_date),
+			 "author_name" : master.commit.author.name
+			 }
+           current_app.logger.debug("Last commit info: %s " % (commit_info))
+	   return commit_info
+        except Exception, e:
+            current_app.logger.error("Error checking out the repository: " + str(e))
+            raise e
+#+END_SRC
+**** test cases
+
+#+NAME: test_get_commit_info
+#+BEGIN_SRC python
+
+class TestGetCommitInfo(unittest.TestCase):
+
+    def create_app(self):
+        app = create_app(config)
+        with app.app_context():
+            self.git = GitCommands()
+        return app
+
+    def setUp(self):
+        self.create_app()
+        self.git_url = "https://github.com/ksripathi/test-project1"
+        self.git_clone_loc = self.git.git_clone_loc
+
+    def tearDown(self):
+        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        #shutil.rmtree(repo_path)
+
+    def test_get_commit_info(self):
+        print "test_get_commit_info"
+        app = self.create_app()
+        with app.app_context():
+            git = GitCommands()
+            repo_name = git.construct_repo_name(self.git_url)
+            git.clone_repo(self.git_url, repo_name)
+	    git.checkout_version(repo_name, version="develop")
+	    git.get_commit_info(repo_name)
+            self.assertEqual(git.get_repo_version(repo_name), "develop")
+
+#+END_SRC
+
 *** Create an issue on github repository
   :PROPERTIES:
   :CUSTOM_ID: git_issue
@@ -408,13 +466,13 @@ class TestGetRepoVersion(unittest.TestCase):
 	repo_org = self.construct_org_name(git_url)
 	git_api_url = '%s/%s/%s/issues' % (GIT_API, repo_org, repo_name)
 	current_app.logger.debug("Git REST API URL : %s" % (git_api_url))
-
+	body = self.get_commit_info(repo_name)
 	try:
 	    import json
 	    session = requests.Session()
 	    session.auth = (USERNAME, PASSWORD)
 	    issue = {'title': title,
-		     'body': body,
+		     'body': str(body),
 		     'assignee': '',
 		     'milestone': None,
 		     'labels': labels
@@ -2300,6 +2358,7 @@ from flask import current_app
 from git import Repo
 import requests
 import json
+import datetime
 #+end_src
 
 *** execute commands
@@ -2371,6 +2430,7 @@ if __name__ == '__main__':
 <<repo_version>>
 <<get_repo_version>>
 <<create_issue>>
+<<get_commit_info>>
 #+END_SRC
 
 ** source for api layer
@@ -2411,6 +2471,7 @@ if __name__ == '__main__':
 #<<test_create_issue>>
 #<<test_extract_repo>>
 #<<test_repo_exist>>
+#<<test_get_commit_info>>
 <<test_ci_push_docs>>
 #<<test_ci_build_sources>>
 #<<test_ci_deploy_repo>>
