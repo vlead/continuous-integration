@@ -23,7 +23,7 @@
   Function reads the =git_config= file and returns the
   =git_clone_location=
 
-**** implemenation
+**** Implementation
 
 #+NAME: git_clone_loc    
 #+BEGIN_SRC python
@@ -39,7 +39,7 @@ class GitCommands:
         return self.git_clone_loc
 
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_git_clone_loc
 #+BEGIN_SRC python
@@ -74,7 +74,7 @@ class TestGetGitLoc(unittest.TestCase):
   
   Function reads the =git_url= and returns the =repository name=
 
-**** implemenation
+**** Implementation
 #+NAME: construct_repo 
 #+BEGIN_SRC python
 
@@ -86,7 +86,7 @@ class TestGetGitLoc(unittest.TestCase):
         current_app.logger.debug("repo_name: %s" % repo_name)
         return str(repo_name)
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_construct_repo
 #+BEGIN_SRC python
@@ -139,7 +139,7 @@ class TestConstructRepo(unittest.TestCase):
         current_app.logger.debug("org_name: %s" % org_name)
         return str(org_name)
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_construct_org
 #+BEGIN_SRC python
@@ -182,7 +182,7 @@ class TestConstructOrg(unittest.TestCase):
   Function checks for existed repository on =git_clone_location=
   directory
 
-**** implemenation
+**** Implementation
 #+NAME: repo_exist 
 #+BEGIN_SRC python
 
@@ -194,7 +194,7 @@ class TestConstructOrg(unittest.TestCase):
 	    current_app.logger.debug("Exception %s" % str(e))
 	    return False
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_repo_exists
 #+BEGIN_SRC python
@@ -246,7 +246,7 @@ class TestRepoExist(unittest.TestCase):
             current_app.logger.error("Error Cloning the repository: " + str(e))
             raise e
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_clone_repo
 #+BEGIN_SRC python
@@ -276,6 +276,7 @@ class TestCloneRepo(unittest.TestCase):
 #+END_SRC
 
 *** pull_repo
+**** implementation
     Function pulls the repository on =git_clone_location= directory
 #+NAME: repo_pull
 #+BEGIN_SRC python
@@ -293,7 +294,7 @@ class TestCloneRepo(unittest.TestCase):
             current_app.logger.error("Error Pulling the repository: " + str(e))
             raise e
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_repo_pull
 #+BEGIN_SRC python
@@ -342,7 +343,7 @@ class TestRepoPull(unittest.TestCase):
             current_app.logger.error("Error checking out the repository: " + str(e))
             raise e
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_repo_version
 #+BEGIN_SRC python
@@ -388,7 +389,7 @@ class TestRepoVersion(unittest.TestCase):
             current_app.logger.error("Error checking out the repository: " + str(e))
             raise e
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_get_repo_version
 #+BEGIN_SRC python
@@ -443,7 +444,7 @@ class TestGetRepoVersion(unittest.TestCase):
             current_app.logger.error("Error checking out the repository: " + str(e))
             raise e
 #+END_SRC
-**** test cases
+**** Test Cases
 
 #+NAME: test_get_commit_info
 #+BEGIN_SRC python
@@ -518,7 +519,7 @@ class TestGetCommitInfo(unittest.TestCase):
 
 #+END_SRC
 
-**** test cases
+**** Test Cases
 #+NAME: test_create_issue
 #+BEGIN_SRC python
 
@@ -587,7 +588,7 @@ class TesteCreateGitIssue(unittest.TestCase):
 
 #+END_SRC
 
-**** test cases
+**** Test Cases
 #+NAME: test_create_label
 #+BEGIN_SRC python
 
@@ -648,7 +649,7 @@ class TesteCreateLabel(unittest.TestCase):
 
 #+END_SRC
 
-**** test cases
+**** Test Cases
 #+NAME: test_git_label_exists
 #+BEGIN_SRC python
 
@@ -751,7 +752,7 @@ if __name__ == '__main__':
 
 #+END_SRC
 
-*** test cases
+*** Test Cases
 
 #+NAME: test_execute_shell_cmd
 #+BEGIN_SRC python
@@ -892,7 +893,7 @@ def docsPusher(git_url, repo_name):
 #+END_SRC
 
 
-*** test cases
+*** Test Cases
 #+NAME: test_push_docs
 #+BEGIN_SRC python
 
@@ -979,7 +980,7 @@ class TestRun:
 		    current_app.logger.debug("Ran test file = %s" % (test_file))
 		    count = count + 1
             if count == len(test_files):
-	        title = "successfully ran all test cases"
+	        title = "successfully ran all Test Cases"
 		labels = ["ran_test_cases"]
 		if not git.git_label_exists(self.git_url, labels[0]):
 		    git.create_label(self.git_url, labels[0])
@@ -999,7 +1000,7 @@ class TestRun:
 #+END_SRC
 
 
-*** Unit Test for createTestEnv
+*** Test Cases
     This runs a unit test on the functionality provided by the above
     class.
 
@@ -1453,16 +1454,16 @@ class TestBuilSources(TestCase):
    - Also it assigns label called =build_failed= otherwise
      =build_success=.
 
-   - Also it runs all the test cases by creating the test environment.
+   - Also it runs all the Test Cases by creating the test environment.
      even if single test case is failed to run it creates the issue
      with titled =coudn't run test case <name>= and assigns the label
    
-   - If test cases or success/failed to run it creates the label
+   - If Test Cases or success/failed to run it creates the label
      =successfully_ran_tests= and =failed_to_run_tests= respectively
      
    - It attaches the last commit details (like =user name= , =commit
      id= , =commit message= and =date of commit= into the created
-     issue as a body content which causes the test cases
+     issue as a body content which causes the Test Cases
      failed/success to run) and =URL= of doc server where the
      documents are pushed/hosted into
 
@@ -2063,8 +2064,10 @@ class TestPushDocs(TestCase):
  http://localhost:5000/ci_deploy_repo
 #+END_EXAMPLE
 *** Implementation   
+
 #+NAME: ci_deploy_repo
 #+BEGIN_SRC python
+
 @api.route("/ci_deploy_repo", methods = ['POST', 'GET'])
 def deploy_repo():
     if request.method == 'POST':
@@ -2375,8 +2378,10 @@ if __name__ == '__main__':
 
 
 * Tangle                                                        :boilerplate:
-  
-** sources for git module
+** source  
+
+*** sources for git module
+
 #+BEGIN_SRC python :tangle git_commands.py :eval no :noweb yes
 <<imports_for_git>>
 <<git_clone_loc>>
@@ -2393,9 +2398,9 @@ if __name__ == '__main__':
 <<git_label_exists>>
 #+END_SRC
 
-** source for api layer
-#+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 
+*** source for api layer
+#+BEGIN_SRC python :tangle api.py :eval no :noweb yes
 <<imports_for_api>>
 <<build_repo>>
 <<run_test>>
@@ -2405,11 +2410,11 @@ if __name__ == '__main__':
 <<ci_deploy_repo>>
 #+END_SRC
 
-** source for for execute command
+
+*** source for for execute command
 #+BEGIN_SRC python :tangle execute_commands.py :eval no :noweb yes
 <<imports_for_exec_cmd>>
 <<execute_shell_cmd>>
-
 #+END_SRC
 
 
