@@ -149,9 +149,9 @@ print "deployment package"
 
 
 * Auto Deployment steps using nginx server
-** Install dependendent python packages
-  Here we use the =setuptools= module from the standard lib, to make a
-  =setup.py= file, which will install all the python library dependencies.
+** setup.py 
+   Here we use the =setuptools= module from the standard lib, to make a
+   =setup.py= file, which will install all the python library dependencies.
 
 #+BEGIN_SRC python :tangle setup.py :eval no
 from setuptools import setup
@@ -173,7 +173,7 @@ setup(
 )
 
 #+END_SRC
-** Deploying the application
+** wsgi configuration
 
 #+BEGIN_SRC python :tangle wsgi.py :eval no
 
@@ -187,7 +187,7 @@ application = create_app(config)
 
 #+END_SRC
 
-** CI-Service conf
+** make CI as service
 
 #+BEGIN_SRC python :tangle ci-service.conf :eval no
 
@@ -205,7 +205,7 @@ exec gunicorn --workers 3 --bind unix:ci-service.sock -m 007 wsgi
 
 #+END_SRC
 
-** nginx module conf
+** nginx socket configuration
 
 #+BEGIN_SRC python :tangle ci-service :eval no
 
@@ -221,7 +221,7 @@ server {
 
 #+END_SRC
 
-** Tangle 							:boilerplate:
+** tangle 							:boilerplate:
 #+BEGIN_SRC python :eval no :tangle __init__.py
 print "deployment package"
 #+END_SRC
