@@ -49,24 +49,23 @@ class GitCommands:
 class TestGetGitLoc(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
-        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.create_app()
+        self.git_url = "https://github.com/vlead/ovpl"	
 
     def tearDown(self):
         pass
 
     def test_get_git_loc(self):
         print "test_get_git_loc"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            clone_loc = git.get_git_clone_loc()
-            self.assertEqual(clone_loc, GIT_CLONE_LOC)
+        clone_loc = self.git.get_git_clone_loc()
+        self.assertEqual(clone_loc, GIT_CLONE_LOC)
+
 
 #+END_SRC
 
@@ -98,25 +97,30 @@ class TestGetGitLoc(unittest.TestCase):
 class TestConstructRepo(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
-        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.create_app()
+        self.git_url = "https://github.com/vlead/ovpl"
+	self.git_url1 = "https://github.com/ksripathi/lab-data-service"
 
     def tearDown(self):
         pass
 
     def test_construct_repo(self):
         print "test_construct_repo"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            repo_name1 = self.git_url.split("/")[-1]
-            self.assertEqual(repo_name, repo_name1)
+        repo_name = self.git.construct_repo_name(self.git_url)
+        repo_name1 = self.git_url.split("/")[-1]
+        self.assertEqual(repo_name, repo_name1)
+
+    def test_construct_repo_error(self):
+        print "test_construct_repo"
+        repo_name = self.git.construct_repo_name(self.git_url)
+	repo_name1 = self.git.construct_repo_name(self.git_url1)
+        self.assertNotEqual(repo_name, repo_name1)
 
 #+END_SRC
 
@@ -147,25 +151,31 @@ class TestConstructRepo(unittest.TestCase):
 class TestConstructOrg(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
-        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.create_app()
+        self.git_url = "https://github.com/vlead/ovpl"
+	self.git_url1 = "https://github.com/ksripathi/lab-data-service"
 
     def tearDown(self):
         pass
 
     def test_construct_org(self):
         print "test_construct_org"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            org_name = git.construct_org_name(self.git_url)
-            org_name1 = self.git_url.split("/")[-2]
-            self.assertEqual(org_name, org_name1)
+	org_name = self.git.construct_org_name(self.git_url)
+        org_name1 = self.git_url.split("/")[-2]
+	self.assertEqual(org_name, org_name1)
+
+    def test_construct_org_error(self):
+        print "test_construct_org_error"
+	org_name = self.git.construct_org_name(self.git_url)
+	org_name1 = self.git.construct_org_name(self.git_url1)
+	self.assertNotEqual(org_name, org_name1)
+            
 
 #+END_SRC
 
@@ -183,39 +193,45 @@ class TestConstructOrg(unittest.TestCase):
 
     def repo_exists(self, repo_name):
         current_app.logger.debug("dir = %s" % (self.git_clone_loc + repo_name))
-        return os.path.isdir(self.git_clone_loc + repo_name)
+	try:
+            return os.path.isdir(self.git_clone_loc + repo_name)
+	except Exception as e:
+	    current_app.logger.debug("Exception %s" % str(e))
+	    return False
 #+END_SRC
 **** test cases
 
-#+NAME: test_repo_exist
+#+NAME: test_repo_exists
 #+BEGIN_SRC python
 
 class TestRepoExist(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
+
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/vlead/lab-data-service"
-        self.git_clone_loc = self.git.git_clone_loc
+        self.git_url = "https://github.com/vlead/ovpl"
 
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
         shutil.rmtree(repo_path)
 
     def test_repo_exist(self):
         print "test_repo_exist"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-            self.assertEqual(git.repo_exists(repo_name), True)
-
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+        self.assertEqual(self.git.repo_exists(repo_name), True)
+    """
+    def test_repo_exist_error(self):
+        print "test_repo_exist_error"
+        repo_name = self.git.construct_repo_name(self.git_url)
+	self.assertEqual(self.git.repo_exists(repo_name), False)
+    """
 #+END_SRC
 
 *** clone_repo
@@ -242,28 +258,24 @@ class TestRepoExist(unittest.TestCase):
 class TestCloneRepo(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
         self.create_app()
         self.git_url = "https://github.com/vlead/lab-data-service"
-        self.git_clone_loc = self.git.git_clone_loc
 
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
         shutil.rmtree(repo_path)
 
     def test_repo_clone(self):
         print "test_repo_clone"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-            self.assertEqual(git.repo_exists(repo_name), True)
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+        self.assertEqual(self.git.repo_exists(repo_name), True)
 
 #+END_SRC
 
@@ -293,30 +305,26 @@ class TestCloneRepo(unittest.TestCase):
 class TestRepoPull(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/vlead/lab-data-service"
-        self.git_clone_loc = self.git.git_clone_loc
+        self.git_url = "https://github.com/vlead/ovpl"	
 
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
         shutil.rmtree(repo_path)
 
     def test_repo_pull(self):
         print "test_repo_pull"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-	    git.checkout_version(repo_name, version="develop")
-	    pull_status = git.pull_repo(repo_name, version="develop")
-            self.assertEqual(pull_status, 0)
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+	self.git.checkout_version(repo_name, version=GIT_BRANCH)
+	pull_status = self.git.pull_repo(repo_name, version=GIT_BRANCH)
+        self.assertEqual(pull_status, 0)
 
 #+END_SRC
 
@@ -345,29 +353,25 @@ class TestRepoPull(unittest.TestCase):
 class TestRepoVersion(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/vlead/lab-data-service"
-        self.git_clone_loc = self.git.git_clone_loc
+        self.git_url = "https://github.com/vlead/ovpl"	
 
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
         shutil.rmtree(repo_path)
 
     def test_repo_version(self):
         print "test_repo_version"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-	    git.checkout_version(repo_name, version="develop")
-            self.assertEqual(git.get_repo_version(repo_name), "develop")
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+	self.git.checkout_version(repo_name, version=GIT_BRANCH)
+        self.assertEqual(self.git.get_repo_version(repo_name), GIT_BRANCH)
 
 #+END_SRC
 
@@ -394,29 +398,25 @@ class TestRepoVersion(unittest.TestCase):
 class TestGetRepoVersion(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/vlead/lab-data-service"
-        self.git_clone_loc = self.git.git_clone_loc
+        self.git_url = "https://github.com/vlead/ovpl"	
 
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
         shutil.rmtree(repo_path)
 
     def test_get_repo_version(self):
         print "test_get_repo_version"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-	    git.checkout_version(repo_name, version="develop")
-            self.assertEqual(git.get_repo_version(repo_name), "develop")
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+	self.git.checkout_version(repo_name, version=GIT_BRANCH)
+        self.assertEqual(git.get_repo_version(repo_name), GIT_BRANCH)
 
 #+END_SRC
 
@@ -451,30 +451,25 @@ class TestGetRepoVersion(unittest.TestCase):
 class TestGetCommitInfo(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/ksripathi/test-project1"
-        self.git_clone_loc = self.git.git_clone_loc
-
+        self.git_url = "https://github.com/vlead/ovpl"	
+	self.repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
-        #shutil.rmtree(repo_path)
+        shutil.rmtree(self.repo_path)
 
     def test_get_commit_info(self):
         print "test_get_commit_info"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-	    git.checkout_version(repo_name, version="develop")
-	    git.get_commit_info(repo_name)
-            self.assertEqual(git.get_repo_version(repo_name), "develop")
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+	self.git.checkout_version(repo_name, version=GIT_BRANCH)
+	self.git.get_commit_info(repo_name)
+        self.assertEqual(self.git.get_repo_version(repo_name), GIT_BRANCH)
 
 #+END_SRC
 
@@ -513,8 +508,10 @@ class TestGetCommitInfo(unittest.TestCase):
 	    current_app.logger.debug("Creating issue on git repository = %s under organization = %s" % (repo_name, repo_org))
 	    r = session.post(git_api_url, json.dumps(issue))
 	    if r.status_code == 201:
+	        issue_id = r.json()['number']
 		current_app.logger.debug("Successfully created Issue with title : %s on repository = %s" % (title, repo_name))
-		return True
+		current_app.logger.debug("Issue id = %s" % (issue_id))
+		return (True, issue_id)
 	    else:
 		current_app.logger.error("Could not creat Issue : %s on repository = %s" % (title, repo_name))
 		current_app.logger.error("Response : %s" % r.content)
@@ -531,26 +528,26 @@ class TestGetCommitInfo(unittest.TestCase):
 
 class TesteCreateGitIssue(unittest.TestCase):
     def create_app(self):
-        app = create_app(config)
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
-	self.git_url = "https://github.com/ksripathi/test-project1" 
+        self.create_app()
+        self.git_url = "https://github.com/ksripathi/test-project1"	
 
     def tearDown(self):
 	pass
 
     def test_create_git_issue(self):
         print "test_create_git_issue"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            title = "test issue"
- 	    labels = ["build_failed"]
-	    if not git.git_label_exists(self.git_url, labels[0]):
-	        git.create_label(self.git_url, labels[0])
-	    ret_status = git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
-            self.assertEqual(ret_status, True)
+        title = "test issue"
+ 	labels = ["build_failed"]
+	if not self.git.git_label_exists(self.git_url, labels[0]):
+	   self.git.create_label(self.git_url, labels[0])
+	(ret_status, issue_id) = self.git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
+        self.assertEqual(ret_status, True)
 
 #+END_SRC
 
@@ -584,7 +581,7 @@ class TesteCreateGitIssue(unittest.TestCase):
 	            'color': "f29513"
 		    }
 
-	    current_app.logger.debug("Creating issue label on git repository = %s " % (git_url))
+	    current_app.logger.debug("Creating issue label=%s on git repository = %s " % (issue, git_url))
 	    r = session.post(git_api_url, json.dumps(issue))
 	    if r.status_code == 201:
 		current_app.logger.debug("Successfully created Issue label with name : %s on repository = %s" % (label, git_url))
@@ -604,33 +601,29 @@ class TesteCreateGitIssue(unittest.TestCase):
 #+BEGIN_SRC python
 
 class TesteCreateLabel(unittest.TestCase):
+
     def create_app(self):
-        app = create_app(config)
-        return app        
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
-	self.git_url = "https://github.com/ksripathi/test-project1" 
+        self.create_app()
+        self.git_url = "https://github.com/ksripathi/test-project1"
+	self.label = "tests_passed"
 
     def tearDown(self):
-	app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-	    repo_name = git.construct_repo_name(self.git_url)
-	    org_name = git.construct_org_name(self.git_url)
-	    label = "tests_passed"
-	    DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, label)
-	    session = requests.Session()
-	    session.auth = (USERNAME, PASSWORD)
-	    print DEL_URL
-	    session.delete(DEL_URL)
+        repo_name = self.git.construct_repo_name(self.git_url)
+	org_name = self.git.construct_org_name(self.git_url)
+	DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, self.label)
+	session = requests.Session()
+	session.auth = (USERNAME, PASSWORD)
+	session.delete(DEL_URL)
 
     def test_create_git_label(self):
         print "test_create_git_label"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-	    label = "tests_passed"
-	    self.assertEqual(git.create_label(self.git_url, label), True)
+	self.assertEqual(self.git.create_label(self.git_url, self.label), True)
 
 #+END_SRC
 
@@ -639,12 +632,12 @@ class TesteCreateLabel(unittest.TestCase):
   :CUSTOM_ID: git_label
   :END:    
  
- This function creates a required github issue and assigns the
- respective label to it in a particular repository. This is helps in
- notifying the project's contributors about the consequences of
- different commits i.e. whether it results in a successful build or
- not.
- 
+  This function creates a required github issue and assigns the
+  respective label to it in a particular repository. This is helps in
+  notifying the project's contributors about the consequences of
+  different commits i.e. whether it results in a successful build or
+  not.
+  
 **** Implementation
 #+NAME: git_label_exists
 #+BEGIN_SRC python
@@ -654,12 +647,14 @@ class TesteCreateLabel(unittest.TestCase):
 	repo_org = self.construct_org_name(git_url)
 	git_api_url = '%s/%s/%s/labels/%s' % (GIT_API, repo_org, repo_name, label)
 	current_app.logger.debug("Git REST API URL : %s" % (git_api_url))
-
 	try:
 	    r = requests.get(git_api_url)
-	    if r.status_code == 201:
+	    current_app.logger.debug("status code %s " %(r.status_code))
+	    if r.status_code == 200:
+	        current_app.logger.debug("Label exists : %s" % (label))
 		return True
 	    elif r.status_code == 404:
+                current_app.logger.debug("Label not exists : %s" % (label))
 	        return False
 	except Exception as e:
 	    current_app.logger.error("Exception : %s" % str(e))
@@ -672,33 +667,35 @@ class TesteCreateLabel(unittest.TestCase):
 #+BEGIN_SRC python
 
 class TesteLabelExists(unittest.TestCase):
+
     def create_app(self):
-        app = create_app(config)
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
-	self.git_url = "https://github.com/ksripathi/test-project1" 
+        self.create_app()
+        self.git_url = "https://github.com/ksripathi/test-project1"
+	self.label = "tests_passed"
+	self.label1 = "tests_failed"
 
     def tearDown(self):
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-	    repo_name = git.construct_repo_name(self.git_url)
-	    org_name = git.construct_org_name(self.git_url)
-	    label = "tests_passed"
-	    DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, label)
-	    session = requests.Session()
-	    session.auth = (USERNAME, PASSWORD)
-	    print DEL_URL
-	    session.delete(DEL_URL)
+        repo_name = self.git.construct_repo_name(self.git_url)
+	org_name = self.git.construct_org_name(self.git_url)
+	DEL_URL = "%s/%s/%s/labels/%s" % (GIT_API, org_name, repo_name, self.label)
+	session = requests.Session()
+	session.auth = (USERNAME, PASSWORD)
+	session.delete(DEL_URL)
 
     def test_git_label_exists(self):
         print "test_git_label_exists"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-	    label = "tests_passed"
-	    self.assertEqual(git.create_label(self.git_url, label), True)
+    	self.git.create_label(self.git_url, self.label)
+	self.assertEqual(self.git.git_label_exists(self.git_url, self.label), True)
+
+    def test_git_label_not_exists(self):
+        print "test_git_label_not_exists"
+	self.assertEqual(self.git.git_label_exists(self.git_url, self.label1), False)
 
 #+END_SRC
 
@@ -775,24 +772,24 @@ if __name__ == '__main__':
 class TestExecuteCmd(unittest.TestCase):
 
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+        self.git = GitCommands()
 
     def setUp(self):
-        self.git_url = "https://github.com/vlead/lab-data-service"
+        self.create_app()
+        self.git_url = "https://github.com/vlead/ovpl"	
 
     def tearDown(self):
-        pass
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
+        shutil.rmtree(repo_path)
 
-    def test_exec_cmd(self):
-        print "test_exec_cmd"
-        app = self.create_app()
-        with app.app_context():
-	    command = "ls -l"
-	    (ret_code, output) = execute_command(command)
-            self.assertEqual(ret_code, 0)
+    def test_exec_shell_cmd(self):
+        print "test_exec_shell_cmd"
+	command = "http://github.com/vlead/ovpl.git"
+	self.git.clone_repo(command, "ovpl")
+        self.assertEqual(self.git.repo_exists("ovpl"), True)
 
 #+END_SRC
 
@@ -1029,7 +1026,7 @@ def docsPusher(git_url, repo_name):
 	    labels = ["docs_published"]		   
 	    if not git.git_label_exists(git_url, labels[0]):
 	        git.create_label(git_url, labels[0])
-	    ret_status = git.makeGithubIssue(git_url, title, body, assignee=None, milestone=None, labels=labels)
+	    (ret_status, issue_id) = git.makeGithubIssue(git_url, title, body, assignee=None, milestone=None, labels=labels)
 	    current_app.logger.debug("Copied SRC_DIR = %s to DEST_DIR = %s:%s%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
 	    return True
         else:
@@ -2104,7 +2101,7 @@ def deploy_repo():
 		    labels = ["deploy_failed"]		   
 		    if not git.git_label_exists(git_url, labels[0]):
 	                git.create_label(git_url, labels[0])
-		    ret_status = git.makeGithubIssue(git_url, title, body=str(message), assignee=None, milestone=None, labels=labels)
+		    (ret_status. issue_id) = git.makeGithubIssue(git_url, title, body=str(message), assignee=None, milestone=None, labels=labels)
 		    abort(500, message)
 		else:
 		    data['url'] = "http://" + r.text                      
@@ -2112,7 +2109,7 @@ def deploy_repo():
 		    labels = ["deployed"]		      
 		    if not git.git_label_exists(git_url, labels[0]):
 	                git.create_label(git_url, labels[0])
-		    ret_status = git.makeGithubIssue(git_url, title, body=str(data), assignee=None, milestone=None, labels=labels)
+		    (ret_status, issue_id) = git.makeGithubIssue(git_url, title, body=str(data), assignee=None, milestone=None, labels=labels)
 		    current_app.logger.debug("Hosted details = %s" % (data))
 		    return jsonify(data)
 	    elif r.status_code == 401:
@@ -2408,21 +2405,20 @@ if __name__ == '__main__':
 #<<test_clone_repo>>
 #<<test_repo_pull>>
 #<<test_get_repo_version>>
-#<<test_repo_exist>>
+#<<test_repo_exists>>
 #<<test_construct_org>>
 #<<test_construct_repo>>
 #<<test_git_clone_loc>>
 #<<test_execute_shell_cmd>>
 #<<test_build_repo>>
 #<<test_run_test>>
-#<<test_exec_cmd>>
 #<<test_create_issue>>
 #<<test_get_commit_info>>
-<<test_push_docs>>
+#<<test_push_docs>>
 #<<test_ci_push_docs>>
 #<<test_ci_build_sources>>
 #<<test_ci_deploy_repo>>
 #<<test_create_label>>
-#<<test_git_label_exists>>
+<<test_git_label_exists>>
 <<run_test_cases>>
 #+end_src
