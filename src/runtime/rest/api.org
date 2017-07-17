@@ -20,11 +20,8 @@
   :CUSTOM_ID: clone_repository
   :END:    
   
-  This class contains a function which clones a repository if it is
-  already not present.If the repository is already present it pulls
-  the updated repository.  While performing the above actions it also
-  simultaneously logs the actions with the respective status of
-  failure and success.
+  Function reads the =git_config= file and returns the
+  =git_clone_location=
 
 **** implemenation
 
@@ -75,8 +72,7 @@ class TestGetGitLoc(unittest.TestCase):
   :CUSTOM_ID: get_repo_name_ref
   :END:    
   
-   This function is used to extract the repository name from a given
-   github repository url.
+  Function reads the =git_url= and returns the =repository name=
 
 **** implemenation
 #+NAME: construct_repo 
@@ -130,9 +126,8 @@ class TestConstructRepo(unittest.TestCase):
   :CUSTOM_ID: get_repo_org_ref
   :END:    
   
-   This function is used to extract organization name from a given
-   github repository url.
-
+  Function reads the =git_url= and returns the =repository organiation name=
+  
 **** implementation
 #+NAME: construct_org 
 #+BEGIN_SRC python
@@ -184,9 +179,8 @@ class TestConstructOrg(unittest.TestCase):
   :PROPERTIES:
   :CUSTOM_ID: exist_repository
   :END:    
-
-  This function is used to check the validity of the github repository
-  (i.e. it's existence).
+  Function checks for existed repository on =git_clone_location=
+  directory
 
 **** implemenation
 #+NAME: repo_exist 
@@ -236,6 +230,7 @@ class TestRepoExist(unittest.TestCase):
 #+END_SRC
 
 *** clone_repo
+    Function clones the repository into =git_clone_location= directory
 **** implementation
 #+NAME: repo_clone 
 #+BEGIN_SRC python
@@ -281,7 +276,7 @@ class TestCloneRepo(unittest.TestCase):
 #+END_SRC
 
 *** pull_repo
-
+    Function pulls the repository on =git_clone_location= directory
 #+NAME: repo_pull
 #+BEGIN_SRC python
 
@@ -330,6 +325,7 @@ class TestRepoPull(unittest.TestCase):
 #+END_SRC
 
 *** checkout_branch
+    Function changes the git branch to =specified branch=
 **** implementation
 #+NAME: repo_version
 #+BEGIN_SRC python
@@ -377,6 +373,7 @@ class TestRepoVersion(unittest.TestCase):
 #+END_SRC
 
 *** get_git_branch
+    Function returns the current active branch on repository
 **** implementation
 #+NAME: get_repo_version
 #+BEGIN_SRC python
@@ -422,6 +419,8 @@ class TestGetRepoVersion(unittest.TestCase):
 #+END_SRC
 
 *** get_git_commit_info
+    Function returns the latest commit details like =user name= ,
+    =commit id= and =commit message= for a given repository and branch
 **** implementation
 #+NAME: get_commit_info
 #+BEGIN_SRC python
@@ -478,12 +477,8 @@ class TestGetCommitInfo(unittest.TestCase):
   :PROPERTIES:
   :CUSTOM_ID: git_issue
   :END:    
- 
- This function creates a required github issue and assigns the
- respective label to it in a particular repository. This is helps in
- notifying the project's contributors about the consequences of
- different commits i.e. whether it results in a successful build or
- not.
+  Function creates the github issue on given =github_url= with title,
+  body, label(s), milestone and assignee(s).
 
 **** Implementation
 #+NAME: create_issue
@@ -498,8 +493,6 @@ class TestGetCommitInfo(unittest.TestCase):
 	try:
 	    import json
 	    session = requests.Session()
-	    USERNAME = "ksripathi"
-	    PASSWORD = "sudswathi1993&"
 	    session.auth = (USERNAME, PASSWORD)
 	    issue = {'title': title,
 		     'body': str(body),
@@ -558,12 +551,7 @@ class TesteCreateGitIssue(unittest.TestCase):
   :PROPERTIES:
   :CUSTOM_ID: git_label
   :END:    
- 
- This function creates a required github issue and assigns the
- respective label to it in a particular repository. This is helps in
- notifying the project's contributors about the consequences of
- different commits i.e. whether it results in a successful build or
- not.
+  Function creates the =label= for given repository url.
 
 **** Implementation
 #+NAME: create_label
@@ -579,8 +567,6 @@ class TesteCreateGitIssue(unittest.TestCase):
 	try:
 	    import json
 	    session = requests.Session()
-	    USERNAME = "ksripathi"
-	    PASSWORD = "sudswathi1993&"
 	    session.auth = (USERNAME, PASSWORD)
 	    issue = {'name': label,
 	            'color': "f29513"
@@ -636,13 +622,8 @@ class TesteCreateLabel(unittest.TestCase):
   :PROPERTIES:
   :CUSTOM_ID: git_label
   :END:    
- 
-  This function creates a required github issue and assigns the
-  respective label to it in a particular repository. This is helps in
-  notifying the project's contributors about the consequences of
-  different commits i.e. whether it results in a successful build or
-  not.
   
+   Function checks for existed =label= for given repository url
 **** Implementation
 #+NAME: git_label_exists
 #+BEGIN_SRC python
@@ -707,9 +688,10 @@ class TesteLabelExists(unittest.TestCase):
 
 ** Execute Shell Commands
 *** implementation
-   This is a utility function which executes the linux command and returns
-   status code to identify the success or failiure of execution of the respective command on the machine.
-   This function is extensively used by the other functions.
+   - This is a utility function which executes the linux command and
+     returns status code to identify the success or failiure of
+     execution of the respective command on the machine.
+   - This function is extensively used by the other functions.
 
 #+NAME: execute_shell_cmd
 #+BEGIN_SRC python
@@ -800,17 +782,8 @@ class TestExecuteCmd(unittest.TestCase):
   :PROPERTIES:
   :CUSTOM_ID: build_repository
   :END:    
-  This Class contains the function which builds the
-  github repository.
-  
- - If the build is unsuccessful it 
-  creates an issue on respective git repository and
-  assigns a label called =build_failed= to it.
-
-- If build is generated successfully it creates an issue on github
-  repository and assigns label called =build_passed= and closes the
-  issue.
-
+ - This class contains the function which builds the sources from
+   github repository.
 
 *** Implementation
 
@@ -880,10 +853,9 @@ class TestBuild(unittest.TestCase):
   :CUSTOM_ID: doc_push
   :END: 
   
-  This utility function pushes the literate documentation
-  of a lab/service which are generated in the docs folder
-  to a document server which is generally hosted in staging
-  environment.
+  This utility function pushes the literate documentation of a
+  lab/service which are generated during build into a document server
+  which is hosted on staging environment.
   
 *** Implementation
 #+NAME: push_docs
@@ -952,21 +924,12 @@ class TestPushDocs(unittest.TestCase):
 #+END_SRC
 
 
-** Run test suit
+** Run test suite
   :PROPERTIES:
   :CUSTOM_ID: run_tests
   :END:    
-  This Class contains the function which builds the
-  github repository.
-  
- - If the build is unsuccessful it 
-  creates an issue on respective git repository and
-  assigns a label called =build_failed= to it.
-
-- If build is generated successfully it creates an issue on github
-  repository and assigns label called =build_passed= and closes the
-  issue.
-
+  This class contains functions to create the =test environment= and
+  to run the =test suite=
 
 *** Implementation
 
@@ -1086,11 +1049,21 @@ class TestCreateTestEnv(unittest.TestCase):
 
 #+END_SRC
 
+
 ** REST API to build the souces of github repository
-   - This API clones/pulls the repository and then builds the
-     sources. If build is failed to generate it will create an issue
-     on respective repository by assigning label called =build_failed=
-     otherwise =build_passed=.
+
+   - This API clone/pull the repository and then builds the
+     sources. 
+
+   - If build is failed to generate it creates an issue on respective
+     repository with title =Build sources= 
+
+   - Also it assigns label called =build_failed= otherwise
+     =build_success=.
+     
+   - It attaches the last commit details like =user name= , =commit
+     id= , =commit message= and =date of commit= into the created
+     issue as a body content which causes the build failed/success
 
    - This API is invoked from github repository as a webhook request
      as soon as a new tag is released.
@@ -1468,19 +1441,34 @@ class TestBuilSources(TestCase):
 
 #+END_SRC
 
-** REST API to push the docs into doc server
-   - This API clones/pulls the repository and then builds the
-     sources. If build is failed to generate it will create an issue
-     on respective repository by assigning label called =build_failed=
-     otherwise =build_passed=.
 
-   - After build ran successfully all the literate documentation of
-     the repository will be moved into =doc-server=
+** REST API to push the docs into doc server
+
+   - This API clone/pull the repository and then builds the
+     sources. 
+
+   - If build is failed to generate it creates an issue on respective
+     repository with title =Build sources= 
+
+   - Also it assigns label called =build_failed= otherwise
+     =build_success=.
+
+   - Also it runs all the test cases by creating the test environment.
+     even if single test case is failed to run it creates the issue
+     with titled =coudn't run test case <name>= and assigns the label
+   
+   - If test cases or success/failed to run it creates the label
+     =successfully_ran_tests= and =failed_to_run_tests= respectively
+     
+   - It attaches the last commit details (like =user name= , =commit
+     id= , =commit message= and =date of commit= into the created
+     issue as a body content which causes the test cases
+     failed/success to run) and =URL= of doc server where the
+     documents are pushed/hosted into
 
    - This API is invoked from github repository as a webhook request
      as soon as a new tag is released.
-   
-   
+     
 *** API Design
   :PROPERTIES:
   :CUSTOM_ID: ci_hook_api
@@ -1878,14 +1866,25 @@ class TestPushDocs(TestCase):
 
 #+END_SRC
 
-** REST API to deploy the service/lab using ADS
-   - This API clones/pulls the repository and then builds the
-     sources. If build is failed to generate it will create an issue
-     on respective repository by assigning label called =build_failed=
-     otherwise =build_passed=.
 
-   - After build ran successfully this repository will be deployed on
-     =staging-server= using ADS service =RESTfull API's=.
+** REST API to deploy the service/lab using ADS
+
+   - This API clone/pull the repository and then builds the
+     sources. 
+
+   - If build is failed to generate it creates an issue on respective
+     repository with title =Build sources= 
+
+   - Also it assigns label called =build_failed= otherwise
+     =build_success=.
+     
+   - It attaches the last commit details (like =user name= , =commit
+     id= , =commit message= and =date of commit= into the created
+     issue as a body content which causes the build failed/success)
+     and =URL= of doc server where the documents are pushed/hosted into
+
+   - After build & test suite ran successfully this repository will be
+     deployed on =staging-server= using ADS service's =RESTfull APIs=.
 
    - This API is invoked from github repository as a webhook request
      as soon as a new tag is released.
@@ -2426,7 +2425,7 @@ if __name__ == '__main__':
 #<<test_git_clone_loc>>
 #<<test_execute_shell_cmd>>
 #<<test_build_repo>>
-<<test_run_test>>
+#<<test_run_test>>
 #<<test_create_issue>>
 #<<test_get_commit_info>>
 #<<test_push_docs>>

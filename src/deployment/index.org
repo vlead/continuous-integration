@@ -148,7 +148,7 @@ print "deployment package"
 #+END_SRC
 
 
-* Auto Deployment steps using Apache2 server
+* Auto Deployment steps using nginx server
 ** Install dependendent python packages
   Here we use the =setuptools= module from the standard lib, to make a
   =setup.py= file, which will install all the python library dependencies.
