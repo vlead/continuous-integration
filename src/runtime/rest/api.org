@@ -525,26 +525,36 @@ class TestGetCommitInfo(unittest.TestCase):
 
 class TesteCreateGitIssue(unittest.TestCase):
     def create_app(self):
-        self.app = create_app(config)
-        self.app_context = self.app.app_context()
-        self.app_context.push()
-        self.git = GitCommands()
+	self.app = create_app(config)
+	self.app_context = self.app.app_context()
+	self.app_context.push()
+	self.git = GitCommands()
 
     def setUp(self):
-        self.create_app()
-        self.git_url = "https://github.com/ksripathi/test-project1"	
+	self.create_app()
+	self.git_url = "https://github.com/ksripathi/test-project1"     
 
     def tearDown(self):
-	pass
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
+        shutil.rmtree(repo_path)
 
     def test_create_git_issue(self):
-        print "test_create_git_issue"
-        title = "test issue"
- 	labels = ["build_failed"]
+	print "test_create_git_issue"
+	title = "test issue"
+	labels = ["build_failed"]
+	repo_name = self.git.construct_repo_name(self.git_url)
+	self.git.clone_repo(self.git_url, repo_name)
+	commit_info = self.git.get_commit_info(repo_name)
+	alert_msg = "Failed to build sources details are here"
+	body = "`%s` **Author Name :** %s, **Last Commit :** ,%s **Commit Date :** %s, \
+	       **Last Commit Message :** %s, **Branch :** %s" % \
+	       (alert_msg, commit_info['author_name'], commit_info['last_commit'], \
+	       commit_info['commit_date'], commit_info['last_commit_msg'], \
+	       commit_info['branch'])
 	if not self.git.git_label_exists(self.git_url, labels[0]):
 	   self.git.create_label(self.git_url, labels[0])
-	(ret_status, issue_id) = self.git.makeGithubIssue(self.git_url, title, body=None, assignee=None, milestone=None, labels=labels)
-        self.assertEqual(ret_status, True)
+	(ret_status, issue_id) = self.git.makeGithubIssue(self.git_url, title, body, assignee=None, milestone=None, labels=labels)
+	self.assertEqual(ret_status, True)
 
 #+END_SRC
 
@@ -972,7 +982,14 @@ class TestRun:
 	count = 0
 	git = GitCommands()
 	try:
-	    body = git.get_commit_info(self.repo_name)
+	    commit_info = git.get_commit_info(self.repo_name)
+	    alert_msg = "Successfully ran all the test cases as on commit details :"
+	    body = "`%s` **Author Name :** %s, **Last Commit :** ,%s **Commit Date :** %s, \
+	           **Last Commit Message :** %s, **Branch :** %s" % \
+		   (alert_msg, commit_info['author_name'], commit_info['last_commit'], \
+		   commit_info['commit_date'], commit_info['last_commit_msg'], \
+		   commit_info['branch'])
+	    #body = git.get_commit_info(self.repo_name)
 	    for test_file in test_files:
 		cmd = "export PYTHONPATH=$(pwd);python %s" % (test_file)
 		(ret_code, output) = execute_command(cmd)
@@ -988,7 +1005,14 @@ class TestRun:
 	        return True
 	except Exception as e:
 	    current_app.logger.error("Couldn't Ran test file = %s" % (test_file))
+	    alert_msg = "Failed to ran all the test cases as on commit details :"
 	    title = "Failed to run test file %s" % (test_file)
+            body = "`%s` **Author Name :** %s, **Last Commit :** ,%s **Commit Date :** %s, \
+	           **Last Commit Message :** %s, **Branch :** %s" % \
+		   (alert_msg, commit_info['author_name'], commit_info['last_commit'], \
+		   commit_info['commit_date'], commit_info['last_commit_msg'], \
+		   commit_info['branch'])
+
 	    labels = ["failed_to_run_tests"]
 	    if not git.git_label_exists(self.git_url, labels[0]):
 	        git.create_label(self.git_url, labels[0])
@@ -2430,7 +2454,7 @@ if __name__ == '__main__':
 #<<test_git_clone_loc>>
 #<<test_execute_shell_cmd>>
 #<<test_build_repo>>
-#<<test_run_test>>
+<<test_run_test>>
 #<<test_create_issue>>
 #<<test_get_commit_info>>
 #<<test_push_docs>>
