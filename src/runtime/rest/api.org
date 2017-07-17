@@ -13,6 +13,7 @@
 
 * REST  
   
+
 ** Execute Git Commands
 *** get_git_clone_loc
   :PROPERTIES:
@@ -497,6 +498,8 @@ class TestGetCommitInfo(unittest.TestCase):
 	try:
 	    import json
 	    session = requests.Session()
+	    USERNAME = "ksripathi"
+	    PASSWORD = "sudswathi1993&"
 	    session.auth = (USERNAME, PASSWORD)
 	    issue = {'title': title,
 		     'body': str(body),
@@ -576,6 +579,8 @@ class TesteCreateGitIssue(unittest.TestCase):
 	try:
 	    import json
 	    session = requests.Session()
+	    USERNAME = "ksripathi"
+	    PASSWORD = "sudswathi1993&"
 	    session.auth = (USERNAME, PASSWORD)
 	    issue = {'name': label,
 	            'color': "f29513"
@@ -775,23 +780,21 @@ class TestExecuteCmd(unittest.TestCase):
         self.app = create_app(config)
         self.app_context = self.app.app_context()
         self.app_context.push()
-        self.git = GitCommands()
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/vlead/ovpl"	
 
     def tearDown(self):
-        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
-        shutil.rmtree(repo_path)
+        pass
 
     def test_exec_shell_cmd(self):
         print "test_exec_shell_cmd"
-	command = "http://github.com/vlead/ovpl.git"
-	self.git.clone_repo(command, "ovpl")
-        self.assertEqual(self.git.repo_exists("ovpl"), True)
+	command = "ls -l"
+	(status_code, output) = execute_command(command)
+        self.assertEqual(status_code, 0)
 
 #+END_SRC
+
 
 ** Build the repository
   :PROPERTIES:
@@ -845,35 +848,111 @@ class RepoBuild:
 #+BEGIN_SRC python
 
 class TestBuild(unittest.TestCase):
+
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/vlead/lab-data-service"
+	self.git = GitCommands()
+        self.git_url = "https://github.com/ksripathi/test-project1"
         self.git_clone_loc = self.git.git_clone_loc
 
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
         shutil.rmtree(repo_path)
 
     def test_repo_build(self):
         print "test_repo_build"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-            repo_build = RepoBuild(self.git_url)
-            self.assertEqual(repo_build.repoBuilder(), True)
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+        repo_build = RepoBuild(self.git_url)
+        self.assertEqual(repo_build.repoBuilder(), True)
 
 
 #+END_SRC
 
-** Tests run
+
+** Push docs to doc server 
+  :PROPERTIES:
+  :CUSTOM_ID: doc_push
+  :END: 
+  
+  This utility function pushes the literate documentation
+  of a lab/service which are generated in the docs folder
+  to a document server which is generally hosted in staging
+  environment.
+  
+*** Implementation
+#+NAME: push_docs
+#+BEGIN_SRC python
+
+def docsPusher(git_url, repo_name):
+    git = GitCommands()
+    git_clone_loc = git.git_clone_loc
+    SRC_DIR = ("%s/build/docs/" % (git_clone_loc + repo_name))
+    copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
+    #copy_command = "rsync -arz --progress " + SRC_DIR + " " + USER + "@" + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
+    current_app.logger.debug("copy command = %s" % copy_command)
+    try:    
+        (ret_code, output) = execute_command(copy_command)
+        if ret_code == 0:
+	    """
+	    #body = git.get_commit_info(repo_name)
+	    body = "http://%s/%s" % (IP_ADDRESS, repo_name)
+	    title = "Published docs on doc server"
+	    labels = ["docs_published"]		   
+	    if not git.git_label_exists(git_url, labels[0]):
+	        git.create_label(git_url, labels[0])
+	    (ret_status, issue_id) = git.makeGithubIssue(git_url, title, body, assignee=None, milestone=None, labels=labels)
+	    """
+	    current_app.logger.debug("Copied SRC_DIR = %s to DEST_DIR = %s:%s%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
+	    return True
+        else:
+            current_app.logger.debug("Copy Unsuccessful from SRC_DIR = %s to DEST_DIR = %s/%s/%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
+	    return False
+    except Exception, e:
+        current_app.logger.error("ERROR = %s" % str(e))
+        return False
+
+#+END_SRC
+
+
+*** test cases
+#+NAME: test_push_docs
+#+BEGIN_SRC python
+
+class TestPushDocs(unittest.TestCase):
+
+    def create_app(self):
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
+
+    def setUp(self):
+        self.create_app()
+	self.git = GitCommands()
+        self.git_url = "https://github.com/ksripathi/test-project1"
+        self.git_clone_loc = self.git.git_clone_loc
+
+    def tearDown(self):
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
+        shutil.rmtree(repo_path)
+
+    def test_push_docs(self):
+        print "test_push_docs"
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+        repo_build = RepoBuild(self.git_url)
+	repo_build.repoBuilder()
+        self.assertEqual(docsPusher(self.git_url, repo_name), True)
+
+#+END_SRC
+
+
+** Run test suit
   :PROPERTIES:
   :CUSTOM_ID: run_tests
   :END:    
@@ -925,10 +1004,11 @@ class TestRun:
         find_cmd = "find . -name '*test*.py'"
         cmd = subprocess.Popen([find_cmd], shell=True, stdout=subprocess.PIPE).stdout
         test_files = cmd.read().splitlines()
-	sys.path.append(src_path)
+	#sys.path.insert(0, src_path)
 	count = 0
+	git = GitCommands()
 	try:
-	    body = self.get_commit_info(self.repo_name)
+	    body = git.get_commit_info(self.repo_name)
 	    for test_file in test_files:
 		cmd = "export PYTHONPATH=$(pwd);python %s" % (test_file)
 		(ret_code, output) = execute_command(cmd)
@@ -938,17 +1018,17 @@ class TestRun:
             if count == len(test_files):
 	        title = "successfully ran all test cases"
 		labels = ["ran_test_cases"]
-		if not self.git.git_label_exists(self.git_url, labels[0]):
-		    self.git.create_label(self.git_url, labels[0])
-		self.git.makeGithubIssue(self.git_url, title, body, assignee=None, milestone=None, labels=labels)
-		return True
+		if not git.git_label_exists(self.git_url, labels[0]):
+		    git.create_label(self.git_url, labels[0])
+		git.makeGithubIssue(self.git_url, title, body, assignee=None, milestone=None, labels=labels)
+	        return True
 	except Exception as e:
 	    current_app.logger.error("Couldn't Ran test file = %s" % (test_file))
 	    title = "Failed to run test file %s" % (test_file)
-	    labels = ["build_failed"]
-	    if not self.git.git_label_exists(self.git_url, labels[0]):
-	        self.git.create_label(self.git_url, labels[0])
-	    self.git.makeGithubIssue(self.git_url, title, body, assignee=None, milestone=None, labels=labels)
+	    labels = ["failed_to_run_tests"]
+	    if not git.git_label_exists(self.git_url, labels[0]):
+	        git.create_label(self.git_url, labels[0])
+	    git.makeGithubIssue(self.git_url, title, body, assignee=None, milestone=None, labels=labels)
 	    current_app.logger.error("Exception = %s" % (str(e)))
 	    return False
 
@@ -964,111 +1044,45 @@ class TestRun:
 #+BEGIN_SRC python
 
 class TestCreateTestEnv(unittest.TestCase):
+
     def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
+        self.app = create_app(config)
+        self.app_context = self.app.app_context()
+        self.app_context.push()
 
     def setUp(self):
         self.create_app()
-        self.git_url = "https://github.com/vlead/lab-data-service"
+	self.git = GitCommands()
+        self.git_url = "https://github.com/ksripathi/test-project"
         self.git_clone_loc = self.git.git_clone_loc
 
     def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
-        #shutil.rmtree(repo_path)
-
+        repo_path = self.git.git_clone_loc + self.git.construct_repo_name(self.git_url)
+        shutil.rmtree(repo_path)
+    """	
     def test_create_test_env(self):
         print "test_create_test_env"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-            repo_build = RepoBuild(self.git_url)
-	    repo_build.repoBuilder()
-	    tr = TestRun(self.git_url)
-	    tr.createTestEnv()
-	    tr.runTestSuit()
-            self.assertEqual(tr.createTestEnv(), True)
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+        repo_build = RepoBuild(self.git_url)
+	repo_build.repoBuilder()
+	tr = TestRun(self.git_url)
+	tr.createTestEnv()
+	#tr.runTestSuit()
+        self.assertEqual(tr.createTestEnv(), True)
+    """
+    def test_run_test_suit(self):
+        print "test_test_suit"
+        repo_name = self.git.construct_repo_name(self.git_url)
+        self.git.clone_repo(self.git_url, repo_name)
+        repo_build = RepoBuild(self.git_url)
+	repo_build.repoBuilder()
+	tr = TestRun(self.git_url)
+	tr.createTestEnv()
+	tr.runTestSuit()
+        self.assertEqual(tr.createTestEnv(), True)
 
 
-#+END_SRC
-
-** Push docs to doc server 
-  :PROPERTIES:
-  :CUSTOM_ID: doc_push
-  :END: 
-  
-  This utility function pushes the literate documentation
-  of a lab/service which are generated in the docs folder
-  to a document server which is generally hosted in staging
-  environment.
-  
-*** Implementation
-#+NAME: push_docs
-#+BEGIN_SRC python
-
-def docsPusher(git_url, repo_name):
-    git = GitCommands()
-    git_clone_loc = git.git_clone_loc
-    SRC_DIR = ("%s/build/docs/" % (git_clone_loc + repo_name))
-    try:
-        copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
-        #copy_command = "rsync -arz --progress " + SRC_DIR + " " + USER + "@" + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
-        current_app.logger.debug("copy command = %s" % copy_command)
-        (ret_code, output) = execute_command(copy_command)
-        if ret_code == 0:
-	    #body = git.get_commit_info(repo_name)
-	    body = "http://%s/%s" % (IP_ADDRESS, repo_name)
-	    title = "Published docs on doc server"
-	    labels = ["docs_published"]		   
-	    if not git.git_label_exists(git_url, labels[0]):
-	        git.create_label(git_url, labels[0])
-	    (ret_status, issue_id) = git.makeGithubIssue(git_url, title, body, assignee=None, milestone=None, labels=labels)
-	    current_app.logger.debug("Copied SRC_DIR = %s to DEST_DIR = %s:%s%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
-	    return True
-        else:
-            current_app.logger.debug("Copy Unsuccessful from SRC_DIR = %s to DEST_DIR = %s/%s/%s" % (SRC_DIR, IP_ADDRESS, DEST_DIR, repo_name))
-	    current_app.logger.debug("Command = %s , return code = %s" % (copy_command, str(ret_code)))
-	    return False
-    except Exception, e:
-        current_app.logger.error("ERROR = %s" % str(e))
-        return False
-
-#+END_SRC
-
-*** test cases
-#+NAME: test_push_docs
-#+BEGIN_SRC python
-
-class TestPushDocs(unittest.TestCase):
-    def create_app(self):
-        app = create_app(config)
-        with app.app_context():
-            self.git = GitCommands()
-        return app
-
-    def setUp(self):
-        self.create_app()
-        self.git_url = "https://github.com/ksripathi/test-project1"
-        self.git_clone_loc = self.git.git_clone_loc
-
-    def tearDown(self):
-        repo_path = self.git_clone_loc + self.git_url.split("/")[-1]
-        #shutil.rmtree(repo_path)
-
-    def test_push_docs(self):
-        print "test_push_docs"
-        app = self.create_app()
-        with app.app_context():
-            git = GitCommands()
-            repo_name = git.construct_repo_name(self.git_url)
-            git.clone_repo(self.git_url, repo_name)
-            repo_build = RepoBuild(self.git_url)
-	    repo_build.repoBuilder()
-            self.assertEqual(docsPusher(self.git_url, repo_name), True)
 
 #+END_SRC
 
@@ -1863,6 +1877,7 @@ class TestPushDocs(TestCase):
 	self.assertEqual(response.status_code, 200)
 
 #+END_SRC
+
 ** REST API to deploy the service/lab using ADS
    - This API clones/pulls the repository and then builds the
      sources. If build is failed to generate it will create an issue
@@ -2411,7 +2426,7 @@ if __name__ == '__main__':
 #<<test_git_clone_loc>>
 #<<test_execute_shell_cmd>>
 #<<test_build_repo>>
-#<<test_run_test>>
+<<test_run_test>>
 #<<test_create_issue>>
 #<<test_get_commit_info>>
 #<<test_push_docs>>
@@ -2419,6 +2434,6 @@ if __name__ == '__main__':
 #<<test_ci_build_sources>>
 #<<test_ci_deploy_repo>>
 #<<test_create_label>>
-<<test_git_label_exists>>
+#<<test_git_label_exists>>
 <<run_test_cases>>
 #+end_src
