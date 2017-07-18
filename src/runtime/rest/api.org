@@ -1893,6 +1893,9 @@ class TestPushDocs(TestCase):
 
 
 ** REST API to deploy the service/lab using ADS
+  :PROPERTIES:
+  :CUSTOM_ID: deploy_service
+  :END:    
 
    - This API clone/pull the repository and then builds the
      sources. 
@@ -1915,9 +1918,6 @@ class TestPushDocs(TestCase):
      as soon as a new tag is released.
  
 *** API Design
-  :PROPERTIES:
-  :CUSTOM_ID: ci_hook_api
-  :END:    
   - URL :: /ci_deploy_repo
 
   - Method :: POST
