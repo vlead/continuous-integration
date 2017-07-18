@@ -30,5 +30,7 @@
 
 2. [[./design/index.org][Design]]
 
-3. [[./deployment/index.org][Deployment]]
+3. [[./runtime/rest/index.org][REST API]]
+
+4. [[./deployment/index.org][Deployment]]
        
