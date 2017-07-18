@@ -4,15 +4,15 @@ To ensure evolution of software and solicit contribution from folks across the w
 
 *INTRODUCTION* :
 
-- Continuous integration is a DevOps software development practice where developers regularly merge their code changes    into a central repository, after which automated builds and tests are run.
-- Continuous integration most often refers to the build or integration stage of the software release process and entails both an automation component (e.g. a CI or build service) and a cultural component (e.g. learning to integrate frequently). 
-- The key goals of continuous integration are to find and address bugs quicker, improve software quality, and reduce the time it takes to validate and release new software updates.
+Continuous integration is a DevOps software development practice where developers regularly merge their code changes    into a central repository, after which automated builds and tests are run. Continuous integration most often refers to the build or integration stage of the software release process and entails both an automation component (e.g. a CI or build service) and a cultural component (e.g. learning to integrate frequently). The key goals of continuous integration are to find and address bugs quicker, improve software quality, and reduce the time it takes to validate and release new software updates.
 
 A lab is currently defined as a set of related experiments and is a web application. Each lab is a repository on github.In the past, developers on a would work in isolation and only attempt to merge their changes to the master branch once their work was completed. This batched process made merging accumulated code changes difficult and time-consuming. This is compounded when small bugs accumulate for a long time without correction.
 
 With continuous integration, developers from around the world can contribute to Virtual Labs.The continuous integration service detects commits to the shared repository, and automatically builds and runs unit tests on the new code changes to immediately surface any functional or integration errors.
 
-METHODOLOGY:Our basis of the whole implementaion was to build a microservice which could be scaled over time with the requirement.One of the best ways to implement a microservice is using flask in python.The Continuous Integration service was provided in the form of APIs to the conritbutors/ developers.The functionality provided by Github webhooks were exploited to invoke these APIs whenever a change was made to the repo.The JSON payload
+*METHODOLOGY* :
+
+Our basis of the whole implementaion was to build a microservice which could be scaled over time with the requirement.One of the best ways to implement a microservice is using flask in python.The Continuous Integration service was provided in the form of APIs to the conritbutors/ developers.The functionality provided by Github webhooks were exploited to invoke these APIs whenever a change was made to the repo.The JSON payload
 sent by these webhooks were used to extract information from about the repository to carry on further processing invovled in the Continuous Integration process(Building, testing, notification, etc).Apart from this ceratin shell scripts were used to align the notification process to our requirement.Similar APIs were built using flask to piplene this Continuous Integration process with the current Auto Deployement Process which would depoly the application in the production environment after the successful build and tests.Secuirty issues were also dealt with by making this service exculsive to only reposiotoires part of virtual-labs and VLEAD(this is configurable as per the requirement).This service is hosted using Ngnix and Gunicorn along with the already running services.
 
 
