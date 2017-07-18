@@ -16,9 +16,9 @@ Our basis of the whole implementaion was to build a microservice which could be 
 sent by these webhooks were used to extract information from about the repository to carry on further processing invovled in the Continuous Integration process(Building, testing, notification, etc).Apart from this ceratin shell scripts were used to align the notification process to our requirement.Similar APIs were built using flask to piplene this Continuous Integration process with the current Auto Deployement Process which would depoly the application in the production environment after the successful build and tests.Secuirty issues were also dealt with by making this service exculsive to only reposiotoires part of virtual-labs and VLEAD(this is configurable as per the requirement).This service is hosted using Ngnix and Gunicorn along with the already running services.
 
 
-RESULTS: The service was hosted in the testing environment.Unit test cases and integration tests created during the development ran successfuly.Further one of the existing services from VLEAD were taken and tested with our Continuous Integration service.Our Service was able to provide it's functionality without any issues.
+*RESULTS* : The service was hosted in the testing environment.Unit test cases and integration tests created during the development ran successfuly.Further one of the existing services from VLEAD were taken and tested with our Continuous Integration service.Our Service was able to provide it's functionality without any issues.
 
-Conclusion:Microservices is a great way to cater the need of our requirements and offer a simple solution.Instead of relying on heavy industry existing Continuous Integration service like Jenkins or Travis which wasn't able to satisfy all our complete set of functional requirements we were able to provide by developing our own microservice for it.   
+*Conclusion* :Microservices is a great way to cater the need of our requirements and offer a simple solution.Instead of relying on heavy industry existing Continuous Integration service like Jenkins or Travis which wasn't able to satisfy all our complete set of functional requirements we were able to provide by developing our own microservice for it.   
     
 
 
