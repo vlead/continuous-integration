@@ -1738,6 +1738,15 @@ def ci_push_docs():
     if tr.runTestSuit():
         status = docsPusher(git_url, repo_name)  
 	if status:
+	    title = "Docs Published"
+            labels = ["docs_published"]
+            commit_info = git.get_commit_info(repo_name)
+            msg = "Successfully copied docs to doc-server:"
+            body = "`%s` **URL :** http://%s/%s" %  (msg, IP_ADDRESS, repo_name)
+            if not git.git_label_exists(git_url, labels[0]):
+                git.create_label(git_url, labels[0])
+            (ret_status, issue_id) = git.makeGithubIssue(git_url, title, body, assignee=None, milestone=None, labels=labels)
+
             current_app.logger.debug("Successfully copied the docs to doc server")
 	    message = {
 	              "status_code" : 200,
