@@ -67,6 +67,7 @@ class TestGetGitLoc(unittest.TestCase):
 
 #+END_SRC
 
+
 *** construct_repo_name
   :PROPERTIES:
   :CUSTOM_ID: get_repo_name_ref
@@ -120,6 +121,7 @@ class TestConstructRepo(unittest.TestCase):
         self.assertNotEqual(repo_name, repo_name1)
 
 #+END_SRC
+
 
 *** construct_org_name
   :PROPERTIES:
@@ -175,6 +177,7 @@ class TestConstructOrg(unittest.TestCase):
 
 #+END_SRC
 
+
 *** repo_exists
   :PROPERTIES:
   :CUSTOM_ID: exist_repository
@@ -229,6 +232,7 @@ class TestRepoExist(unittest.TestCase):
     """
 #+END_SRC
 
+
 *** clone_repo
     Function clones the repository into =git_clone_location= directory
 **** implementation
@@ -274,6 +278,7 @@ class TestCloneRepo(unittest.TestCase):
         self.assertEqual(self.git.repo_exists(repo_name), True)
 
 #+END_SRC
+
 
 *** pull_repo
 **** implementation
@@ -325,6 +330,7 @@ class TestRepoPull(unittest.TestCase):
 
 #+END_SRC
 
+
 *** checkout_branch
     Function changes the git branch to =specified branch=
 **** implementation
@@ -373,6 +379,7 @@ class TestRepoVersion(unittest.TestCase):
 
 #+END_SRC
 
+
 *** get_git_branch
     Function returns the current active branch on repository
 **** implementation
@@ -418,6 +425,7 @@ class TestGetRepoVersion(unittest.TestCase):
         self.assertEqual(git.get_repo_version(repo_name), GIT_BRANCH)
 
 #+END_SRC
+
 
 *** get_git_commit_info
     Function returns the latest commit details like =user name= ,
@@ -473,6 +481,7 @@ class TestGetCommitInfo(unittest.TestCase):
         self.assertEqual(self.git.get_repo_version(repo_name), GIT_BRANCH)
 
 #+END_SRC
+
 
 *** create_issue
   :PROPERTIES:
@@ -558,6 +567,7 @@ class TesteCreateGitIssue(unittest.TestCase):
 
 #+END_SRC
 
+
 *** create_issue_label
   :PROPERTIES:
   :CUSTOM_ID: git_label
@@ -629,6 +639,7 @@ class TesteCreateLabel(unittest.TestCase):
 
 #+END_SRC
 
+
 *** git_label_exists
   :PROPERTIES:
   :CUSTOM_ID: git_label
@@ -698,6 +709,7 @@ class TesteLabelExists(unittest.TestCase):
 
 
 ** Execute Shell Commands
+
 *** implementation
    - This is a utility function which executes the linux command and
      returns status code to identify the success or failiure of
@@ -761,6 +773,7 @@ if __name__ == '__main__':
 
 
 #+END_SRC
+
 
 *** Test Cases
 
@@ -876,8 +889,8 @@ def docsPusher(git_url, repo_name):
     git = GitCommands()
     git_clone_loc = git.git_clone_loc
     SRC_DIR = ("%s/build/docs/" % (git_clone_loc + repo_name))
-    copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
-    #copy_command = "rsync -arz --progress " + SRC_DIR + " " + USER + "@" + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
+    #copy_command = "rsync -arz --progress " + SRC_DIR + " " + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
+    copy_command = "rsync -avz --progress " + SRC_DIR + " " + USER + "@" + IP_ADDRESS + ":" + DEST_DIR + "/" + repo_name
     current_app.logger.debug("copy command = %s" % copy_command)
     try:    
         (ret_code, output) = execute_command(copy_command)
@@ -1260,6 +1273,7 @@ class TestCreateTestEnv(unittest.TestCase):
 #+BEGIN_EXAMPLE
  http://localhost:5000/ci_build_sources
 #+END_EXAMPLE
+
 *** Implementation   
 #+NAME: ci_build_sources
 #+BEGIN_SRC python
@@ -1270,7 +1284,13 @@ def build_sources():
 	try:
 	    repo_data = request.get_json()
 	    git_url = repo_data['repository']['html_url']
-	    current_app.logger.debug("Git repository URL : %s" % (git_url))
+            git_branch = repo_data['ref']
+            if "https://github.com/ksripathi" not in str(git_url):
+                current_app.logger.debug("Unauthorized webhook git url: %s" % (git_url))
+                abort(401, "Unauthorized webhook request")
+            current_app.logger.debug("Git branch: %s" % (git_branch))
+            current_app.logger.debug("Git repository URL : %s" % (git_url))
+
 	except Exception as e:
 	    current_app.logger.error("Error in request data : %s" % (str(e)))
 	    raise str(e)
@@ -1302,6 +1322,7 @@ def build_sources():
 	return jsonify(message)
 
 #+END_SRC
+
 
 *** Test Cases
 #+NAME: test_ci_build_sources
@@ -1674,6 +1695,7 @@ class TestBuilSources(TestCase):
  http://localhost:5000/ci_push_docs
 #+END_EXAMPLE
 
+
 *** Implementation   
   :PROPERTIES:
   :CUSTOM_ID: ci_hook
@@ -1688,7 +1710,13 @@ def ci_push_docs():
 	try:
 	    repo_data = request.get_json()
 	    git_url = repo_data['repository']['html_url']
-	    current_app.logger.debug("Git repository URL : %s" % (git_url))
+            git_branch = repo_data['ref']
+            if "https://github.com/ksripathi" not in str(git_url):
+                current_app.logger.debug("Unauthorized webhook git url: %s" % (git_url))
+                abort(401, "Unauthorized webhook request")
+            current_app.logger.debug("Git branch: %s" % (git_branch))
+            current_app.logger.debug("Git repository URL : %s" % (git_url))
+
 	except Exception as e:
 	    current_app.logger.error("Exception : %s" % (str(e)))
 	    raise str(e)
@@ -1726,6 +1754,7 @@ def ci_push_docs():
 	abort(500, message)
 
 #+END_SRC
+
 
 *** Test Cases
 This an integration test for the above API.
@@ -2087,6 +2116,7 @@ class TestPushDocs(TestCase):
 #+BEGIN_EXAMPLE
  http://localhost:5000/ci_deploy_repo
 #+END_EXAMPLE
+
 *** Implementation   
 
 #+NAME: ci_deploy_repo
@@ -2098,7 +2128,12 @@ def deploy_repo():
 	try:
 	    repo_data = request.get_json()
 	    git_url = repo_data['repository']['html_url']
-	    current_app.logger.debug("Git repository URL : %s" % (git_url))
+            git_branch = repo_data['ref']
+            if "https://github.com/ksripathi" not in str(git_url):
+                current_app.logger.debug("Unauthorized webhook git url: %s" % (git_url))
+                abort(401, "Unauthorized webhook request")
+            current_app.logger.debug("Git branch: %s" % (git_branch))
+            current_app.logger.debug("Git repository URL : %s" % (git_url))
 	except Exception as e:
 	    current_app.logger.error("Exception : %s" % (str(e)))
 	    raise str(e)
@@ -2115,8 +2150,8 @@ def deploy_repo():
     git.checkout_version(repo_name, GIT_BRANCH)
     repo_build = RepoBuild(git_url)
     repo_build.repoBuilder()
-
     tr.createTestEnv()
+
     if tr.runTestSuit():
 	lab_id = repo_name
 	lab_url = git_url
@@ -2163,6 +2198,7 @@ def deploy_repo():
 	    raise str(e)
 
 #+END_SRC
+
 
 *** Test Cases
 
@@ -2454,7 +2490,7 @@ if __name__ == '__main__':
 #<<test_git_clone_loc>>
 #<<test_execute_shell_cmd>>
 #<<test_build_repo>>
-<<test_run_test>>
+#<<test_run_test>>
 #<<test_create_issue>>
 #<<test_get_commit_info>>
 #<<test_push_docs>>
